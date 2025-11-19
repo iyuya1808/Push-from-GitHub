@@ -31,6 +31,11 @@ if ($error === 'missing_fields') {
 <div class="wrap">
 	<h1><?php echo esc_html__('WP Push from GitHub 設定', 'github-push'); ?></h1>
 
+	<div class="github-push-description" style="margin: 20px 0;">
+		<p><?php echo esc_html__('WP Push from GitHub（省略名：WPGP）は、GitHubで管理されているWordPressプラグインを、WordPress管理画面から簡単に導入・更新できるプラグインです。非公開リポジトリにも対応しており、Personal Access Tokenを使用して安全にアクセスできます。', 'github-push'); ?></p>
+		<p><?php echo esc_html__('このページでは、GitHubリポジトリから管理するプラグインを登録・管理できます。プラグインを追加するには、「新しいプラグインを追加」ボタンをクリックしてください。', 'github-push'); ?></p>
+	</div>
+
 	<div class="github-push-header">
 		<a href="<?php echo esc_url(add_query_arg(array('page' => 'github-push', 'action' => 'edit'), admin_url('admin.php'))); ?>" class="button button-primary">
 			<?php echo esc_html__('新しいプラグインを追加', 'github-push'); ?>
