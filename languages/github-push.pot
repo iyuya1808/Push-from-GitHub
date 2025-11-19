@@ -30,6 +30,10 @@ msgstr ""
 msgid "設定"
 msgstr ""
 
+#: github-push.php:167
+msgid "GitHub設定"
+msgstr ""
+
 #: github-push.php:176
 msgid "ログ"
 msgstr ""
@@ -98,7 +102,15 @@ msgstr ""
 msgid "このページでは、GitHubリポジトリから管理するプラグインを登録・管理できます。プラグインを追加するには、「新しいプラグインを追加」ボタンをクリックしてください。"
 msgstr ""
 
-#: admin/views/settings-page.php:41
+#: admin/views/settings-page.php:35
+msgid "GitHubで管理されているWordPressプラグインを登録・管理できます。非公開リポジトリにも対応しています。"
+msgstr ""
+
+#: admin/views/settings-page.php:40
+msgid "追加"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:23
 msgid "新しいプラグインを追加"
 msgstr ""
 
@@ -166,6 +178,14 @@ msgstr ""
 msgid "例: https://github.com/owner/repo または git@github.com:owner/repo.git"
 msgstr ""
 
+#: admin/views/edit-plugin-form.php:41
+msgid "管理したいGitHubリポジトリのURLを入力してください。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:45
+msgid "公開リポジトリと非公開リポジトリの両方に対応しています。非公開リポジトリの場合は、Personal Access Tokenの設定が必要です。"
+msgstr ""
+
 #: admin/views/edit-plugin-form.php:45
 msgid "更新方法"
 msgstr ""
@@ -182,12 +202,52 @@ msgstr ""
 msgid "チェックを外すと、指定したブランチ（例: main）の最新コミットから更新を取得します。"
 msgstr ""
 
+#: admin/views/edit-plugin-form.php:59
+msgid "プラグインの更新をどのように取得するかを選択します。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:61
+msgid "タグを使用する場合:"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:62
+msgid "GitHubのリリースタグ（例: v1.0.0, v1.2.3）から最新バージョンを取得します。セマンティックバージョニングに適しており、安定版のリリースを管理する場合に推奨されます。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:64
+msgid "ブランチを使用する場合:"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:65
+msgid "指定したブランチ（例: main, develop）の最新コミットから更新を取得します。継続的な開発や最新の変更を常に反映したい場合に適しています。"
+msgstr ""
+
 #: admin/views/edit-plugin-form.php:61
 msgid "ブランチ名"
 msgstr ""
 
 #: admin/views/edit-plugin-form.php:65
 msgid "タグを使用する場合は無視されます。デフォルト: main"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:76
+msgid "更新を取得するGitHubブランチ名を指定してください。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:78
+msgid "一般的なブランチ名: main, master, develop, staging など"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:80
+msgid "デフォルト: main（未入力の場合）"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:82
+msgid "注意:"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:83
+msgid "「タグを使用する」にチェックが入っている場合は、この設定は無視され、タグから最新バージョンが取得されます。"
 msgstr ""
 
 #: admin/views/edit-plugin-form.php:70
@@ -206,6 +266,26 @@ msgstr ""
 msgid "例: my-plugin/my-plugin.php"
 msgstr ""
 
+#: admin/views/edit-plugin-form.php:104
+msgid "このGitHubリポジトリと連携するWordPressプラグインを指定してください。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:106
+msgid "上記のドロップダウンから既にインストールされているプラグインを選択するか、手動でプラグインスラッグを入力してください。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:108
+msgid "プラグインスラッグの形式: フォルダ名/メインファイル名.php"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:110
+msgid "例: my-plugin/my-plugin.php, woocommerce/woocommerce.php"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:113
+msgid "既に他のGitHubリポジトリと連携されているプラグインは選択できません。"
+msgstr ""
+
 #: admin/views/edit-plugin-form.php:92
 msgid "Personal Access Token"
 msgstr ""
@@ -216,6 +296,98 @@ msgstr ""
 
 #: admin/views/edit-plugin-form.php:98
 msgid "トークンを生成"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:124
+msgid "Personal Access Token（PAT）とは:"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:126
+msgid "GitHub APIにアクセスするための認証トークンです。非公開リポジトリにアクセスする場合や、APIレート制限を緩和するために使用します。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:128
+msgid "必要な場合:"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:130
+msgid "非公開（プライベート）リポジトリにアクセスする場合: 必須"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:131
+msgid "公開リポジトリでも使用可能: レート制限が緩和されます（認証なし: 60リクエスト/時 → 認証あり: 5,000リクエスト/時）"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:134
+msgid "トークンの作成方法:"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:136
+msgid "GitHubにログインし、"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:137
+msgid "Settings > Developer settings > Personal access tokens > Tokens (classic)"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:138
+msgid "にアクセス"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:139
+msgid "「Generate new token (classic)」をクリック"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:140
+msgid "トークンに名前を付ける（例: WordPress Plugin Manager）"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:141
+msgid "有効期限を設定（推奨: 90日または1年）"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:142
+msgid "必要なスコープ（権限）を選択:"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:144
+msgid "非公開リポジトリにアクセスする場合に必要（すべてのリポジトリへのフルアクセス）"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:145
+msgid "公開リポジトリのみにアクセスする場合（より制限的）"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:148
+msgid "「Generate token」をクリックしてトークンを生成"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:149
+msgid "生成されたトークンをコピーして、このフィールドに貼り付け（表示されるのは一度だけなので注意）"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:152
+msgid "セキュリティに関する注意:"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:154
+msgid "トークンはパスワードと同様に機密情報です。他人に共有しないでください。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:155
+msgid "トークンが漏洩した場合は、すぐにGitHubでトークンを無効化してください。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:156
+msgid "必要最小限の権限（スコープ）のみを付与することを推奨します。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:157
+msgid "定期的にトークンを更新することを推奨します。"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:161
+msgid "GitHubでトークンを生成"
 msgstr ""
 
 #: admin/views/edit-plugin-form.php:106

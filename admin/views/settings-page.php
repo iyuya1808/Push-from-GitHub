@@ -25,6 +25,26 @@ if ($error === 'missing_fields') {
 	echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__('必須項目が入力されていません', 'github-push') . '</p></div>';
 } elseif ($error === 'plugin_not_found') {
 	echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__('プラグインが見つかりません', 'github-push') . '</p></div>';
+} elseif (!empty($error)) {
+	$error_message = isset($_GET['error_message']) ? urldecode(sanitize_text_field($_GET['error_message'])) : '';
+	if (!empty($error_message)) {
+		echo '<div class="notice notice-error is-dismissible"><p>' . esc_html($error_message) . '</p></div>';
+	} else {
+		// エラーコードに基づいてメッセージを表示
+		$error_messages = array(
+			'repo_not_found' => __('指定されたGitHubリポジトリが見つかりませんでした。', 'github-push'),
+			'repo_access_error' => __('リポジトリにアクセスできませんでした。', 'github-push'),
+			'branch_access_error' => __('指定されたブランチにアクセスできませんでした。', 'github-push'),
+			'plugin_file_not_found' => __('プラグインファイルが見つかりませんでした。リポジトリがWordPressプラグインではない可能性があります。', 'github-push'),
+			'plugin_file_read_error' => __('プラグインファイルの読み込みに失敗しました。', 'github-push'),
+			'plugin_file_content_error' => __('プラグインファイルの内容が取得できませんでした。', 'github-push'),
+			'plugin_file_decode_error' => __('プラグインファイルの内容をデコードできませんでした。', 'github-push'),
+			'invalid_plugin_header' => __('プラグインヘッダーが正しく記載されていません。このリポジトリはWordPressプラグインではない可能性があります。', 'github-push'),
+			'invalid_url' => __('無効なGitHub URLです。', 'github-push'),
+		);
+		$message = isset($error_messages[$error]) ? $error_messages[$error] : __('エラーが発生しました', 'github-push');
+		echo '<div class="notice notice-error is-dismissible"><p>' . esc_html($message) . '</p></div>';
+	}
 }
 ?>
 
@@ -32,13 +52,12 @@ if ($error === 'missing_fields') {
 	<h1><?php echo esc_html__('WP Push from GitHub 設定', 'github-push'); ?></h1>
 
 	<div class="github-push-description" style="margin: 20px 0;">
-		<p><?php echo esc_html__('WP Push from GitHub（省略名：WPGP）は、GitHubで管理されているWordPressプラグインを、WordPress管理画面から簡単に導入・更新できるプラグインです。非公開リポジトリにも対応しており、Personal Access Tokenを使用して安全にアクセスできます。', 'github-push'); ?></p>
-		<p><?php echo esc_html__('このページでは、GitHubリポジトリから管理するプラグインを登録・管理できます。プラグインを追加するには、「新しいプラグインを追加」ボタンをクリックしてください。', 'github-push'); ?></p>
+		<p><?php echo esc_html__('GitHubで管理されているWordPressプラグインを登録・管理できます。非公開リポジトリにも対応しています。', 'github-push'); ?></p>
 	</div>
 
 	<div class="github-push-header">
 		<a href="<?php echo esc_url(add_query_arg(array('page' => 'github-push', 'action' => 'edit'), admin_url('admin.php'))); ?>" class="button button-primary">
-			<?php echo esc_html__('新しいプラグインを追加', 'github-push'); ?>
+			<?php echo esc_html__('追加', 'github-push'); ?>
 		</a>
 	</div>
 
@@ -115,6 +134,13 @@ if ($error === 'missing_fields') {
 			</tbody>
 		</table>
 	<?php endif; ?>
+	
+	<div class="github-push-developer-info" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 13px;">
+		<p>
+			<?php echo esc_html__('開発者:', 'github-push'); ?> 
+			<a href="https://technophere.codm" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('テクノフィア', 'github-push'); ?></a>
+		</p>
+	</div>
 </div>
 
 <div id="github-push-modal" class="github-push-modal" style="display: none;">

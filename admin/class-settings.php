@@ -127,6 +127,22 @@ class GitHub_Push_Settings {
 		
 		// GitHubからリポジトリ情報を取得してプラグイン名を生成
 		$github_api = GitHub_Push_Github_API::get_instance();
+		
+		// リポジトリがWordPressプラグインかどうかを検証
+		$validation_result = $github_api->validate_plugin_repository( $repo_url, $plugin_slug, $branch, $token );
+		if ( is_wp_error( $validation_result ) ) {
+			$error_code = $validation_result->get_error_code();
+			$error_message = $validation_result->get_error_message();
+			wp_redirect( add_query_arg( array( 
+				'page' => 'github-push', 
+				'action' => 'edit',
+				'plugin_id' => $plugin_id,
+				'error' => $error_code,
+				'error_message' => urlencode( $error_message )
+			), admin_url( 'admin.php' ) ) );
+			exit;
+		}
+		
 		$repo_info = $github_api->get_repo_info( $repo_url, $token );
 		
 		if ( is_wp_error( $repo_info ) ) {

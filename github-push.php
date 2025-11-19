@@ -164,8 +164,8 @@ class GitHub_Push
 
 		add_submenu_page(
 			'github-push',
-			__('設定', 'github-push'),
-			__('設定', 'github-push'),
+			__('GitHub設定', 'github-push'),
+			__('GitHub設定', 'github-push'),
 			'manage_options',
 			'github-push',
 			array($this, 'render_settings_page')

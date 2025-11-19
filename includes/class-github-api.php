@@ -785,4 +785,137 @@ class GitHub_Push_Github_API
 
 		return isset($plugin['plugin_slug']) ? $plugin['plugin_slug'] : false;
 	}
+
+	/**
+	 * リポジトリがWordPressプラグインかどうかを検証
+	 *
+	 * @param string $repo_url リポジトリURL
+	 * @param string $plugin_slug プラグインスラッグ
+	 * @param string $branch ブランチ名
+	 * @param string $token アクセストークン
+	 * @return true|WP_Error 検証成功またはエラー
+	 */
+	public function validate_plugin_repository($repo_url, $plugin_slug, $branch = 'main', $token = '')
+	{
+		// リポジトリURLを解析
+		$repo_info = $this->parse_repo_url($repo_url);
+		if (is_wp_error($repo_info)) {
+			return $repo_info;
+		}
+
+		// リポジトリが存在するか確認
+		$repo_data = $this->get_repo_info($repo_url, $token);
+		if (is_wp_error($repo_data)) {
+			$error_code = $repo_data->get_error_code();
+			$error_message = $repo_data->get_error_message();
+
+			if ($error_message === 'Not Found') {
+				return new WP_Error(
+					'repo_not_found',
+					sprintf(
+						__('指定されたGitHubリポジトリが見つかりませんでした。リポジトリURLが正しいか、アクセス権限があるか確認してください。', 'github-push'),
+						$repo_info['owner'],
+						$repo_info['repo']
+					)
+				);
+			}
+
+			return new WP_Error(
+				'repo_access_error',
+				sprintf(
+					__('リポジトリにアクセスできませんでした: %s', 'github-push'),
+					$error_message
+				)
+			);
+		}
+
+		// プラグインファイルのパスを取得
+		$plugin_filename = basename($plugin_slug);
+		$plugin_dir = dirname($plugin_slug);
+
+		// リポジトリのルートディレクトリの内容を取得
+		$root_contents_url = $this->api_base . '/repos/' . $repo_info['owner'] . '/' . $repo_info['repo'] . '/contents?ref=' . $branch;
+		$root_contents = $this->make_request($root_contents_url, $token);
+
+		if (is_wp_error($root_contents)) {
+			return new WP_Error(
+				'branch_access_error',
+				sprintf(
+					__('ブランチ「%s」にアクセスできませんでした。ブランチ名が正しいか確認してください。', 'github-push'),
+					$branch
+				)
+			);
+		}
+
+		// プラグインファイルを検索
+		$plugin_file_path = $this->find_plugin_file_in_contents($root_contents, $plugin_filename, $repo_info, $branch, $token);
+
+		if (!$plugin_file_path) {
+			// プラグインファイルが見つからない場合、プラグインメインファイルを検索
+			$plugin_file_path = $this->find_plugin_main_file($root_contents, $repo_info, $branch, $token);
+
+			if (!$plugin_file_path) {
+				return new WP_Error(
+					'plugin_file_not_found',
+					sprintf(
+						__('指定されたプラグインファイル（%s）がリポジトリ内に見つかりませんでした。リポジトリがWordPressプラグインではない可能性があります。', 'github-push'),
+						$plugin_slug
+					)
+				);
+			}
+		}
+
+		// プラグインファイルの内容を取得して検証
+		$file_url = $this->api_base . '/repos/' . $repo_info['owner'] . '/' . $repo_info['repo'] . '/contents/' . $plugin_file_path . '?ref=' . $branch;
+		$file_response = $this->make_request($file_url, $token);
+
+		if (is_wp_error($file_response)) {
+			return new WP_Error(
+				'plugin_file_read_error',
+				sprintf(
+					__('プラグインファイルの内容を取得できませんでした: %s', 'github-push'),
+					$file_response->get_error_message()
+				)
+			);
+		}
+
+		// Base64デコード
+		if (!isset($file_response['content'])) {
+			return new WP_Error(
+				'plugin_file_content_error',
+				__('プラグインファイルの内容が取得できませんでした。', 'github-push')
+			);
+		}
+
+		$encoded_content = str_replace(array("\n", "\r", " "), '', $file_response['content']);
+		$file_content = base64_decode($encoded_content, true);
+
+		if ($file_content === false) {
+			return new WP_Error(
+				'plugin_file_decode_error',
+				__('プラグインファイルの内容をデコードできませんでした。', 'github-push')
+			);
+		}
+
+		// プラグインヘッダーを検証
+		$has_plugin_name = preg_match('/Plugin\s*Name:\s*([^\n\r]+)/i', $file_content);
+		$has_version = preg_match('/Version:\s*([^\s\n\r\*\/]+)/i', $file_content);
+
+		if (!$has_plugin_name) {
+			return new WP_Error(
+				'invalid_plugin_header',
+				__('プラグインファイルに「Plugin Name:」ヘッダーが見つかりませんでした。このリポジトリはWordPressプラグインではない可能性があります。', 'github-push')
+			);
+		}
+
+		if (!$has_version) {
+			return new WP_Error(
+				'invalid_plugin_header',
+				__('プラグインファイルに「Version:」ヘッダーが見つかりませんでした。プラグインヘッダーが正しく記載されているか確認してください。', 'github-push')
+			);
+		}
+
+		// 検証成功
+		return true;
+	}
 }

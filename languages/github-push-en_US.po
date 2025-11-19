@@ -28,6 +28,10 @@ msgstr "WPGP"
 msgid "設定"
 msgstr "Settings"
 
+#: github-push.php:167
+msgid "GitHub設定"
+msgstr "GitHub Settings"
+
 #: github-push.php:176
 #: includes/class-logger.php:222
 msgid "ログ"
@@ -101,7 +105,14 @@ msgstr "WP Push from GitHub (abbreviated as WPGP) is a plugin that allows you to
 msgid "このページでは、GitHubリポジトリから管理するプラグインを登録・管理できます。プラグインを追加するには、「新しいプラグインを追加」ボタンをクリックしてください。"
 msgstr "On this page, you can register and manage plugins managed from GitHub repositories. To add a plugin, click the \"Add New Plugin\" button."
 
-#: admin/views/settings-page.php:41
+#: admin/views/settings-page.php:35
+msgid "GitHubで管理されているWordPressプラグインを登録・管理できます。非公開リポジトリにも対応しています。"
+msgstr "Register and manage WordPress plugins managed on GitHub. Private repositories are also supported."
+
+#: admin/views/settings-page.php:40
+msgid "追加"
+msgstr "Add"
+
 #: admin/views/edit-plugin-form.php:23
 msgid "新しいプラグインを追加"
 msgstr "Add New Plugin"
@@ -167,6 +178,14 @@ msgstr "GitHub Repository URL"
 msgid "例: https://github.com/owner/repo または git@github.com:owner/repo.git"
 msgstr "Example: https://github.com/owner/repo or git@github.com:owner/repo.git"
 
+#: admin/views/edit-plugin-form.php:41
+msgid "管理したいGitHubリポジトリのURLを入力してください。"
+msgstr "Enter the URL of the GitHub repository you want to manage."
+
+#: admin/views/edit-plugin-form.php:45
+msgid "公開リポジトリと非公開リポジトリの両方に対応しています。非公開リポジトリの場合は、Personal Access Tokenの設定が必要です。"
+msgstr "Supports both public and private repositories. For private repositories, Personal Access Token configuration is required."
+
 #: admin/views/edit-plugin-form.php:45
 msgid "更新方法"
 msgstr "Update Method"
@@ -183,6 +202,26 @@ msgstr "When checked, the latest version will be retrieved from GitHub tags (e.g
 msgid "チェックを外すと、指定したブランチ（例: main）の最新コミットから更新を取得します。"
 msgstr "When unchecked, updates will be retrieved from the latest commit of the specified branch (e.g., main)."
 
+#: admin/views/edit-plugin-form.php:59
+msgid "プラグインの更新をどのように取得するかを選択します。"
+msgstr "Select how to retrieve plugin updates."
+
+#: admin/views/edit-plugin-form.php:61
+msgid "タグを使用する場合:"
+msgstr "When using tags:"
+
+#: admin/views/edit-plugin-form.php:62
+msgid "GitHubのリリースタグ（例: v1.0.0, v1.2.3）から最新バージョンを取得します。セマンティックバージョニングに適しており、安定版のリリースを管理する場合に推奨されます。"
+msgstr "Retrieves the latest version from GitHub release tags (e.g., v1.0.0, v1.2.3). Suitable for semantic versioning and recommended for managing stable releases."
+
+#: admin/views/edit-plugin-form.php:64
+msgid "ブランチを使用する場合:"
+msgstr "When using branches:"
+
+#: admin/views/edit-plugin-form.php:65
+msgid "指定したブランチ（例: main, develop）の最新コミットから更新を取得します。継続的な開発や最新の変更を常に反映したい場合に適しています。"
+msgstr "Retrieves updates from the latest commit of the specified branch (e.g., main, develop). Suitable for continuous development or when you want to always reflect the latest changes."
+
 #: admin/views/edit-plugin-form.php:61
 msgid "ブランチ名"
 msgstr "Branch Name"
@@ -190,6 +229,26 @@ msgstr "Branch Name"
 #: admin/views/edit-plugin-form.php:65
 msgid "タグを使用する場合は無視されます。デフォルト: main"
 msgstr "Ignored when using tags. Default: main"
+
+#: admin/views/edit-plugin-form.php:76
+msgid "更新を取得するGitHubブランチ名を指定してください。"
+msgstr "Specify the GitHub branch name to retrieve updates from."
+
+#: admin/views/edit-plugin-form.php:78
+msgid "一般的なブランチ名: main, master, develop, staging など"
+msgstr "Common branch names: main, master, develop, staging, etc."
+
+#: admin/views/edit-plugin-form.php:80
+msgid "デフォルト: main（未入力の場合）"
+msgstr "Default: main (if left empty)"
+
+#: admin/views/edit-plugin-form.php:82
+msgid "注意:"
+msgstr "Note:"
+
+#: admin/views/edit-plugin-form.php:83
+msgid "「タグを使用する」にチェックが入っている場合は、この設定は無視され、タグから最新バージョンが取得されます。"
+msgstr "If \"Use Tags\" is checked, this setting is ignored and the latest version will be retrieved from tags."
 
 #: admin/views/edit-plugin-form.php:70
 #: includes/class-github-api.php:184
@@ -209,6 +268,26 @@ msgstr "Select from the dropdown above or enter manually."
 msgid "例: my-plugin/my-plugin.php"
 msgstr "Example: my-plugin/my-plugin.php"
 
+#: admin/views/edit-plugin-form.php:104
+msgid "このGitHubリポジトリと連携するWordPressプラグインを指定してください。"
+msgstr "Specify the WordPress plugin to link with this GitHub repository."
+
+#: admin/views/edit-plugin-form.php:106
+msgid "上記のドロップダウンから既にインストールされているプラグインを選択するか、手動でプラグインスラッグを入力してください。"
+msgstr "Select an already installed plugin from the dropdown above, or manually enter the plugin slug."
+
+#: admin/views/edit-plugin-form.php:108
+msgid "プラグインスラッグの形式: フォルダ名/メインファイル名.php"
+msgstr "Plugin slug format: folder-name/main-file.php"
+
+#: admin/views/edit-plugin-form.php:110
+msgid "例: my-plugin/my-plugin.php, woocommerce/woocommerce.php"
+msgstr "Example: my-plugin/my-plugin.php, woocommerce/woocommerce.php"
+
+#: admin/views/edit-plugin-form.php:113
+msgid "既に他のGitHubリポジトリと連携されているプラグインは選択できません。"
+msgstr "Plugins already linked to other GitHub repositories cannot be selected."
+
 #: admin/views/edit-plugin-form.php:92
 msgid "Personal Access Token"
 msgstr "Personal Access Token"
@@ -220,6 +299,98 @@ msgstr "Required for accessing private repositories."
 #: admin/views/edit-plugin-form.php:98
 msgid "トークンを生成"
 msgstr "Generate Token"
+
+#: admin/views/edit-plugin-form.php:124
+msgid "Personal Access Token（PAT）とは:"
+msgstr "What is a Personal Access Token (PAT):"
+
+#: admin/views/edit-plugin-form.php:126
+msgid "GitHub APIにアクセスするための認証トークンです。非公開リポジトリにアクセスする場合や、APIレート制限を緩和するために使用します。"
+msgstr "An authentication token for accessing the GitHub API. Used to access private repositories or to increase API rate limits."
+
+#: admin/views/edit-plugin-form.php:128
+msgid "必要な場合:"
+msgstr "When required:"
+
+#: admin/views/edit-plugin-form.php:130
+msgid "非公開（プライベート）リポジトリにアクセスする場合: 必須"
+msgstr "Accessing private repositories: Required"
+
+#: admin/views/edit-plugin-form.php:131
+msgid "公開リポジトリでも使用可能: レート制限が緩和されます（認証なし: 60リクエスト/時 → 認証あり: 5,000リクエスト/時）"
+msgstr "Also available for public repositories: Rate limits are increased (without authentication: 60 requests/hour → with authentication: 5,000 requests/hour)"
+
+#: admin/views/edit-plugin-form.php:134
+msgid "トークンの作成方法:"
+msgstr "How to create a token:"
+
+#: admin/views/edit-plugin-form.php:136
+msgid "GitHubにログインし、"
+msgstr "Log in to GitHub and access "
+
+#: admin/views/edit-plugin-form.php:137
+msgid "Settings > Developer settings > Personal access tokens > Tokens (classic)"
+msgstr "Settings > Developer settings > Personal access tokens > Tokens (classic)"
+
+#: admin/views/edit-plugin-form.php:138
+msgid "にアクセス"
+msgstr ""
+
+#: admin/views/edit-plugin-form.php:139
+msgid "「Generate new token (classic)」をクリック"
+msgstr "Click \"Generate new token (classic)\""
+
+#: admin/views/edit-plugin-form.php:140
+msgid "トークンに名前を付ける（例: WordPress Plugin Manager）"
+msgstr "Give the token a name (e.g., WordPress Plugin Manager)"
+
+#: admin/views/edit-plugin-form.php:141
+msgid "有効期限を設定（推奨: 90日または1年）"
+msgstr "Set expiration (recommended: 90 days or 1 year)"
+
+#: admin/views/edit-plugin-form.php:142
+msgid "必要なスコープ（権限）を選択:"
+msgstr "Select required scopes (permissions):"
+
+#: admin/views/edit-plugin-form.php:144
+msgid "非公開リポジトリにアクセスする場合に必要（すべてのリポジトリへのフルアクセス）"
+msgstr "Required for accessing private repositories (full access to all repositories)"
+
+#: admin/views/edit-plugin-form.php:145
+msgid "公開リポジトリのみにアクセスする場合（より制限的）"
+msgstr "For accessing public repositories only (more restrictive)"
+
+#: admin/views/edit-plugin-form.php:148
+msgid "「Generate token」をクリックしてトークンを生成"
+msgstr "Click \"Generate token\" to create the token"
+
+#: admin/views/edit-plugin-form.php:149
+msgid "生成されたトークンをコピーして、このフィールドに貼り付け（表示されるのは一度だけなので注意）"
+msgstr "Copy the generated token and paste it into this field (note: it will only be displayed once)"
+
+#: admin/views/edit-plugin-form.php:152
+msgid "セキュリティに関する注意:"
+msgstr "Security notes:"
+
+#: admin/views/edit-plugin-form.php:154
+msgid "トークンはパスワードと同様に機密情報です。他人に共有しないでください。"
+msgstr "Tokens are confidential information like passwords. Do not share them with others."
+
+#: admin/views/edit-plugin-form.php:155
+msgid "トークンが漏洩した場合は、すぐにGitHubでトークンを無効化してください。"
+msgstr "If a token is leaked, immediately revoke it on GitHub."
+
+#: admin/views/edit-plugin-form.php:156
+msgid "必要最小限の権限（スコープ）のみを付与することを推奨します。"
+msgstr "It is recommended to grant only the minimum necessary permissions (scopes)."
+
+#: admin/views/edit-plugin-form.php:157
+msgid "定期的にトークンを更新することを推奨します。"
+msgstr "It is recommended to regularly update tokens."
+
+#: admin/views/edit-plugin-form.php:161
+msgid "GitHubでトークンを生成"
+msgstr "Generate Token on GitHub"
 
 #: admin/views/edit-plugin-form.php:106
 msgid "保存"
@@ -509,3 +680,79 @@ msgstr "Extracted directory not found"
 #: includes/class-logger.php
 msgid "自動更新チェック:"
 msgstr "Auto Update Check:"
+
+#: includes/class-github-api.php:816
+msgid "指定されたGitHubリポジトリが見つかりませんでした。リポジトリURLが正しいか、アクセス権限があるか確認してください。"
+msgstr "The specified GitHub repository was not found. Please check if the repository URL is correct and you have access permissions."
+
+#: includes/class-github-api.php:826
+msgid "リポジトリにアクセスできませんでした: %s"
+msgstr "Could not access repository: %s"
+
+#: includes/class-github-api.php:844
+msgid "ブランチ「%s」にアクセスできませんでした。ブランチ名が正しいか確認してください。"
+msgstr "Could not access branch \"%s\". Please check if the branch name is correct."
+
+#: includes/class-github-api.php:861
+msgid "指定されたプラグインファイル（%s）がリポジトリ内に見つかりませんでした。リポジトリがWordPressプラグインではない可能性があります。"
+msgstr "The specified plugin file (%s) was not found in the repository. The repository may not be a WordPress plugin."
+
+#: includes/class-github-api.php:876
+msgid "プラグインファイルの内容を取得できませんでした: %s"
+msgstr "Could not retrieve plugin file content: %s"
+
+#: includes/class-github-api.php:886
+#: admin/views/settings-page.php:40
+#: admin/views/edit-plugin-form.php:28
+msgid "プラグインファイルの内容が取得できませんでした。"
+msgstr "Could not retrieve plugin file content."
+
+#: includes/class-github-api.php:896
+#: admin/views/settings-page.php:41
+#: admin/views/edit-plugin-form.php:29
+msgid "プラグインファイルの内容をデコードできませんでした。"
+msgstr "Could not decode plugin file content."
+
+#: includes/class-github-api.php:907
+msgid "プラグインファイルに「Plugin Name:」ヘッダーが見つかりませんでした。このリポジトリはWordPressプラグインではない可能性があります。"
+msgstr "The \"Plugin Name:\" header was not found in the plugin file. This repository may not be a WordPress plugin."
+
+#: includes/class-github-api.php:914
+msgid "プラグインファイルに「Version:」ヘッダーが見つかりませんでした。プラグインヘッダーが正しく記載されているか確認してください。"
+msgstr "The \"Version:\" header was not found in the plugin file. Please check if the plugin header is correctly written."
+
+#: admin/views/settings-page.php:35
+#: admin/views/edit-plugin-form.php:23
+msgid "指定されたGitHubリポジトリが見つかりませんでした。"
+msgstr "The specified GitHub repository was not found."
+
+#: admin/views/settings-page.php:36
+#: admin/views/edit-plugin-form.php:24
+msgid "リポジトリにアクセスできませんでした。"
+msgstr "Could not access repository."
+
+#: admin/views/settings-page.php:37
+#: admin/views/edit-plugin-form.php:25
+msgid "指定されたブランチにアクセスできませんでした。"
+msgstr "Could not access the specified branch."
+
+#: admin/views/settings-page.php:38
+#: admin/views/edit-plugin-form.php:26
+msgid "プラグインファイルが見つかりませんでした。リポジトリがWordPressプラグインではない可能性があります。"
+msgstr "Plugin file not found. The repository may not be a WordPress plugin."
+
+#: admin/views/settings-page.php:39
+#: admin/views/edit-plugin-form.php:27
+msgid "プラグインファイルの読み込みに失敗しました。"
+msgstr "Failed to read plugin file."
+
+
+#: admin/views/settings-page.php:42
+#: admin/views/edit-plugin-form.php:30
+msgid "プラグインヘッダーが正しく記載されていません。このリポジトリはWordPressプラグインではない可能性があります。"
+msgstr "Plugin header is not correctly written. This repository may not be a WordPress plugin."
+
+#: admin/views/settings-page.php:43
+#: admin/views/edit-plugin-form.php:31
+msgid "無効なGitHub URLです。"
+msgstr "Invalid GitHub URL."
