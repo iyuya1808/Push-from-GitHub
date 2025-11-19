@@ -134,13 +134,6 @@ if ($error === 'missing_fields') {
 			</tbody>
 		</table>
 	<?php endif; ?>
-	
-	<div class="github-push-developer-info" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 13px;">
-		<p>
-			<?php echo esc_html__('開発者:', 'github-push'); ?> 
-			<a href="https://technophere.codm" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('テクノフィア', 'github-push'); ?></a>
-		</p>
-	</div>
 </div>
 
 <div id="github-push-modal" class="github-push-modal" style="display: none;">
