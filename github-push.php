@@ -4,9 +4,9 @@
  * Plugin Name: WP Push from GitHub
  * Plugin URI: https://github.com/your-username/github-push
  * Description: 非公開GitHubリポジトリで管理されているWordPressプラグインを自動的に導入・更新するプラグイン
- * Version: 1.0.1
- * Author: Your Name
- * Author URI: https://example.com
+ * Version: 1.0.2
+ * Author: Technophere
+ * Author URI: https://technophere.codm
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: github-push

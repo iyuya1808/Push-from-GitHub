@@ -321,8 +321,8 @@ GPL v2 or later
 
 ## クレジット
 
-開発: [あなたの名前]
-公式サイト: [テクノフィア公式サイトURL]
+開発: Technophere
+公式サイト: https://technophere.codm
 
 ---
 
