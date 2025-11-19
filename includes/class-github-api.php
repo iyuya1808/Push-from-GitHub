@@ -55,7 +55,7 @@ class GitHub_Push_Github_API
 		$plugin = $this->get_plugin_data($plugin_id);
 
 		if (! $plugin) {
-			return new WP_Error('plugin_not_found', __('プラグインが見つかりません', 'github-push'));
+			return new WP_Error('plugin_not_found', __('プラグインが見つかりません', 'push-from-github'));
 		}
 
 		// キャッシュをチェック
@@ -181,7 +181,7 @@ class GitHub_Push_Github_API
 		$plugin_slug = isset($plugin['plugin_slug']) ? $plugin['plugin_slug'] : '';
 
 		if (empty($plugin_slug)) {
-			return new WP_Error('plugin_slug_missing', __('プラグインスラッグが指定されていません', 'github-push'));
+			return new WP_Error('plugin_slug_missing', __('プラグインスラッグが指定されていません', 'push-from-github'));
 		}
 
 		$repo_info = $this->parse_repo_url($repo_url);
@@ -284,26 +284,31 @@ class GitHub_Push_Github_API
 			if ($error_message === 'Not Found') {
 				$paths_list = implode(', ', $tried_paths);
 				$error_msg = sprintf(
-					__('プラグインファイルが見つかりませんでした。', 'github-push')
+					__('プラグインファイルが見つかりませんでした。', 'push-from-github')
 				);
-				$error_msg .= "\n" . sprintf(__('検索したファイル名: %s', 'github-push'), $plugin_filename);
-				$error_msg .= "\n" . sprintf(__('試したパス: %s', 'github-push'), $paths_list);
+				// translators: %s: Plugin filename
+				$error_msg .= "\n" . sprintf(__('検索したファイル名: %s', 'push-from-github'), $plugin_filename);
+				// translators: %s: Tried paths
+				$error_msg .= "\n" . sprintf(__('試したパス: %s', 'push-from-github'), $paths_list);
 
 				// ルートディレクトリの内容を表示（デバッグ用）
 				if (!empty($root_files)) {
-					$error_msg .= "\n" . sprintf(__('リポジトリルートのファイル/ディレクトリ: %s', 'github-push'), implode(', ', array_slice($root_files, 0, 20)));
+					// translators: %s: Root files/directories list
+					$error_msg .= "\n" . sprintf(__('リポジトリルートのファイル/ディレクトリ: %s', 'push-from-github'), implode(', ', array_slice($root_files, 0, 20)));
 					if (count($root_files) > 20) {
 						$error_msg .= ' ... (他' . (count($root_files) - 20) . '件)';
 					}
 				} else {
-					$error_msg .= "\n" . __('リポジトリのルートディレクトリを取得できませんでした。', 'github-push');
+					$error_msg .= "\n" . __('リポジトリのルートディレクトリを取得できませんでした。', 'push-from-github');
 					if (is_wp_error($root_contents)) {
-						$error_msg .= ' ' . sprintf(__('エラー: %s', 'github-push'), $root_contents->get_error_message());
+						// translators: %s: Error message
+						$error_msg .= ' ' . sprintf(__('エラー: %s', 'push-from-github'), $root_contents->get_error_message());
 					}
 				}
 
 				$error_msg .= "\n" . sprintf(
-					__('GitHubリポジトリ「%s/%s」のブランチ「%s」内のファイル構造を確認してください。', 'github-push'),
+					// translators: %1$s: Repository owner, %2$s: Repository name, %3$s: Branch name
+					__('GitHubリポジトリ「%1$s/%2$s」のブランチ「%3$s」内のファイル構造を確認してください。', 'push-from-github'),
 					$repo_info['owner'],
 					$repo_info['repo'],
 					$branch
@@ -321,10 +326,10 @@ class GitHub_Push_Github_API
 			$file_content = base64_decode($encoded_content, true);
 
 			if ($file_content === false) {
-				return new WP_Error('file_decode_error', __('ファイル内容のデコードに失敗しました', 'github-push'));
+				return new WP_Error('file_decode_error', __('ファイル内容のデコードに失敗しました', 'push-from-github'));
 			}
 		} else {
-			return new WP_Error('file_content_error', __('ファイル内容を取得できませんでした', 'github-push'));
+			return new WP_Error('file_content_error', __('ファイル内容を取得できませんでした', 'push-from-github'));
 		}
 
 		// プラグインファイルからバージョンを抽出
@@ -332,7 +337,7 @@ class GitHub_Push_Github_API
 
 		if (empty($version)) {
 			// バージョンが見つからない場合はエラーを返す（コミットSHAは使用しない）
-			return new WP_Error('version_not_found', __('プラグインファイルからバージョン情報を取得できませんでした。Version: ヘッダーが正しく記載されているか確認してください。', 'github-push'));
+			return new WP_Error('version_not_found', __('プラグインファイルからバージョン情報を取得できませんでした。Version: ヘッダーが正しく記載されているか確認してください。', 'push-from-github'));
 		}
 
 		return array(
@@ -514,13 +519,15 @@ class GitHub_Push_Github_API
 			// APIエラーの場合は、より詳細なメッセージを返す
 			$error_message = $response->get_error_message();
 			if ($error_message === 'Not Found') {
-				return new WP_Error('no_tags', sprintf(__('リポジトリにタグが見つかりません。GitHubリポジトリ「%s/%s」にタグが作成されているか確認してください。タグがない場合は、「タグを使用する」のチェックを外してブランチを使用してください。', 'github-push'), $owner, $repo));
+				// translators: %1$s: Repository owner, %2$s: Repository name
+				return new WP_Error('no_tags', sprintf(__('リポジトリにタグが見つかりません。GitHubリポジトリ「%1$s/%2$s」にタグが作成されているか確認してください。タグがない場合は、「タグを使用する」のチェックを外してブランチを使用してください。', 'push-from-github'), $owner, $repo));
 			}
 			return $response;
 		}
 
 		if (empty($response) || ! is_array($response) || count($response) === 0) {
-			return new WP_Error('no_tags', sprintf(__('リポジトリにタグが見つかりません。GitHubリポジトリ「%s/%s」にタグが作成されているか確認してください。タグがない場合は、「タグを使用する」のチェックを外してブランチを使用してください。', 'github-push'), $owner, $repo));
+			// translators: %1$s: Repository owner, %2$s: Repository name
+			return new WP_Error('no_tags', sprintf(__('リポジトリにタグが見つかりません。GitHubリポジトリ「%1$s/%2$s」にタグが作成されているか確認してください。タグがない場合は、「タグを使用する」のチェックを外してブランチを使用してください。', 'push-from-github'), $owner, $repo));
 		}
 
 		// 最初のタグ（最新）を返す
@@ -595,7 +602,7 @@ class GitHub_Push_Github_API
 			wp_mkdir_p($temp_dir);
 		}
 
-		$filename = basename(parse_url($url, PHP_URL_PATH));
+		$filename = basename(wp_parse_url($url, PHP_URL_PATH));
 		$file_path = $temp_dir . '/' . uniqid('github-push-') . '-' . $filename;
 
 		$args = array(
@@ -621,11 +628,12 @@ class GitHub_Push_Github_API
 
 		if ($response_code !== 200) {
 			$error_message = wp_remote_retrieve_response_message($response);
-			return new WP_Error('download_failed', sprintf(__('ダウンロードに失敗しました: %s', 'github-push'), $error_message));
+			// translators: %s: Error message
+			return new WP_Error('download_failed', sprintf(__('ダウンロードに失敗しました: %s', 'push-from-github'), $error_message));
 		}
 
 		if (! file_exists($file_path)) {
-			return new WP_Error('file_not_found', __('ダウンロードしたファイルが見つかりません', 'github-push'));
+			return new WP_Error('file_not_found', __('ダウンロードしたファイルが見つかりません', 'push-from-github'));
 		}
 
 		return $file_path;
@@ -662,7 +670,7 @@ class GitHub_Push_Github_API
 		if ($response_code !== 200) {
 			$body = wp_remote_retrieve_body($response);
 			$error_data = json_decode($body, true);
-			$error_message = isset($error_data['message']) ? $error_data['message'] : __('APIリクエストに失敗しました', 'github-push');
+			$error_message = isset($error_data['message']) ? $error_data['message'] : __('APIリクエストに失敗しました', 'push-from-github');
 
 			return new WP_Error('api_error', $error_message);
 		}
@@ -724,7 +732,7 @@ class GitHub_Push_Github_API
 			);
 		}
 
-		return new WP_Error('invalid_url', __('無効なGitHub URLです', 'github-push'));
+		return new WP_Error('invalid_url', __('無効なGitHub URLです', 'push-from-github'));
 	}
 
 	/**
@@ -810,10 +818,11 @@ class GitHub_Push_Github_API
 			$error_message = $repo_data->get_error_message();
 
 			if ($error_message === 'Not Found') {
+				// translators: %1$s: Repository owner, %2$s: Repository name
 				return new WP_Error(
 					'repo_not_found',
 					sprintf(
-						__('指定されたGitHubリポジトリが見つかりませんでした。リポジトリURLが正しいか、アクセス権限があるか確認してください。', 'github-push'),
+						__('指定されたGitHubリポジトリが見つかりませんでした。リポジトリURLが正しいか、アクセス権限があるか確認してください。', 'push-from-github'),
 						$repo_info['owner'],
 						$repo_info['repo']
 					)
@@ -823,7 +832,8 @@ class GitHub_Push_Github_API
 			return new WP_Error(
 				'repo_access_error',
 				sprintf(
-					__('リポジトリにアクセスできませんでした: %s', 'github-push'),
+					// translators: %s: Error message
+					__('リポジトリにアクセスできませんでした: %s', 'push-from-github'),
 					$error_message
 				)
 			);
@@ -841,7 +851,8 @@ class GitHub_Push_Github_API
 			return new WP_Error(
 				'branch_access_error',
 				sprintf(
-					__('ブランチ「%s」にアクセスできませんでした。ブランチ名が正しいか確認してください。', 'github-push'),
+					// translators: %s: Branch name
+					__('ブランチ「%s」にアクセスできませんでした。ブランチ名が正しいか確認してください。', 'push-from-github'),
 					$branch
 				)
 			);
@@ -858,7 +869,8 @@ class GitHub_Push_Github_API
 				return new WP_Error(
 					'plugin_file_not_found',
 					sprintf(
-						__('指定されたプラグインファイル（%s）がリポジトリ内に見つかりませんでした。リポジトリがWordPressプラグインではない可能性があります。', 'github-push'),
+						// translators: %s: Plugin slug
+						__('指定されたプラグインファイル（%s）がリポジトリ内に見つかりませんでした。リポジトリがWordPressプラグインではない可能性があります。', 'push-from-github'),
 						$plugin_slug
 					)
 				);
@@ -873,7 +885,8 @@ class GitHub_Push_Github_API
 			return new WP_Error(
 				'plugin_file_read_error',
 				sprintf(
-					__('プラグインファイルの内容を取得できませんでした: %s', 'github-push'),
+					// translators: %s: Error message
+					__('プラグインファイルの内容を取得できませんでした: %s', 'push-from-github'),
 					$file_response->get_error_message()
 				)
 			);
@@ -883,7 +896,7 @@ class GitHub_Push_Github_API
 		if (!isset($file_response['content'])) {
 			return new WP_Error(
 				'plugin_file_content_error',
-				__('プラグインファイルの内容が取得できませんでした。', 'github-push')
+				__('プラグインファイルの内容が取得できませんでした。', 'push-from-github')
 			);
 		}
 
@@ -893,7 +906,7 @@ class GitHub_Push_Github_API
 		if ($file_content === false) {
 			return new WP_Error(
 				'plugin_file_decode_error',
-				__('プラグインファイルの内容をデコードできませんでした。', 'github-push')
+				__('プラグインファイルの内容をデコードできませんでした。', 'push-from-github')
 			);
 		}
 
@@ -904,14 +917,14 @@ class GitHub_Push_Github_API
 		if (!$has_plugin_name) {
 			return new WP_Error(
 				'invalid_plugin_header',
-				__('プラグインファイルに「Plugin Name:」ヘッダーが見つかりませんでした。このリポジトリはWordPressプラグインではない可能性があります。', 'github-push')
+				__('プラグインファイルに「Plugin Name:」ヘッダーが見つかりませんでした。このリポジトリはWordPressプラグインではない可能性があります。', 'push-from-github')
 			);
 		}
 
 		if (!$has_version) {
 			return new WP_Error(
 				'invalid_plugin_header',
-				__('プラグインファイルに「Version:」ヘッダーが見つかりませんでした。プラグインヘッダーが正しく記載されているか確認してください。', 'github-push')
+				__('プラグインファイルに「Version:」ヘッダーが見つかりませんでした。プラグインヘッダーが正しく記載されているか確認してください。', 'push-from-github')
 			);
 		}
 

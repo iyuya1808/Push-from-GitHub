@@ -51,7 +51,7 @@ class GitHub_Push_Rollback {
 		$plugin = $this->get_plugin_data( $plugin_id );
 		
 		if ( ! $plugin ) {
-			$error = new WP_Error( 'plugin_not_found', __( 'プラグインが見つかりません', 'github-push' ) );
+			$error = new WP_Error( 'plugin_not_found', __( 'プラグインが見つかりません', 'push-from-github' ) );
 			$logger->log( $plugin_id, 'rollback', 'error', $error->get_error_message() );
 			return $error;
 		}
@@ -67,7 +67,7 @@ class GitHub_Push_Rollback {
 		}
 		
 		if ( ! file_exists( $backup_path ) ) {
-			$error = new WP_Error( 'backup_not_found', __( 'バックアップファイルが見つかりません', 'github-push' ) );
+			$error = new WP_Error( 'backup_not_found', __( 'バックアップファイルが見つかりません', 'push-from-github' ) );
 			$logger->log( $plugin_id, 'rollback', 'error', $error->get_error_message() );
 			return $error;
 		}
@@ -75,7 +75,7 @@ class GitHub_Push_Rollback {
 		$plugin_slug = isset( $plugin['plugin_slug'] ) ? $plugin['plugin_slug'] : '';
 		
 		if ( empty( $plugin_slug ) ) {
-			$error = new WP_Error( 'plugin_slug_missing', __( 'プラグインスラッグが指定されていません', 'github-push' ) );
+			$error = new WP_Error( 'plugin_slug_missing', __( 'プラグインスラッグが指定されていません', 'push-from-github' ) );
 			$logger->log( $plugin_id, 'rollback', 'error', $error->get_error_message() );
 			return $error;
 		}
@@ -123,8 +123,10 @@ class GitHub_Push_Rollback {
 		$notifications->send_rollback_notification( $plugin_id );
 		
 		$message = ! empty( $version ) 
-			? sprintf( __( 'プラグインをバージョン %s にロールバックしました', 'github-push' ), $version )
-			: __( 'プラグインをロールバックしました', 'github-push' );
+			? sprintf( 
+				// translators: %s: Version number
+				__( 'プラグインをバージョン %s にロールバックしました', 'push-from-github' ), $version )
+			: __( 'プラグインをロールバックしました', 'push-from-github' );
 		$logger->log( $plugin_id, 'rollback', 'success', $message, $version );
 		
 		return array(
@@ -142,7 +144,7 @@ class GitHub_Push_Rollback {
 		$backups = get_option( 'github_push_backups', array() );
 		
 		if ( ! isset( $backups[ $plugin_id ] ) || empty( $backups[ $plugin_id ] ) ) {
-			return new WP_Error( 'no_backup', __( 'バックアップが見つかりません', 'github-push' ) );
+			return new WP_Error( 'no_backup', __( 'バックアップが見つかりません', 'push-from-github' ) );
 		}
 		
 		$plugin_backups = $backups[ $plugin_id ];
@@ -161,7 +163,7 @@ class GitHub_Push_Rollback {
 			}
 		}
 		
-		return new WP_Error( 'backup_not_found', __( '有効なバックアップファイルが見つかりません', 'github-push' ) );
+		return new WP_Error( 'backup_not_found', __( '有効なバックアップファイルが見つかりません', 'push-from-github' ) );
 	}
 	
 	/**
@@ -172,13 +174,13 @@ class GitHub_Push_Rollback {
 	 */
 	private function extract_zip( $zip_path ) {
 		if ( ! class_exists( 'ZipArchive' ) ) {
-			return new WP_Error( 'zip_not_supported', __( 'ZIP拡張機能が利用できません', 'github-push' ) );
+			return new WP_Error( 'zip_not_supported', __( 'ZIP拡張機能が利用できません', 'push-from-github' ) );
 		}
 		
 		$zip = new ZipArchive();
 		
 		if ( $zip->open( $zip_path ) !== true ) {
-			return new WP_Error( 'zip_open_failed', __( 'ZIPファイルを開けませんでした', 'github-push' ) );
+			return new WP_Error( 'zip_open_failed', __( 'ZIPファイルを開けませんでした', 'push-from-github' ) );
 		}
 		
 		$upload_dir = wp_upload_dir();
@@ -186,14 +188,14 @@ class GitHub_Push_Rollback {
 		
 		if ( ! wp_mkdir_p( $extract_dir ) ) {
 			$zip->close();
-			return new WP_Error( 'extract_dir_failed', __( '展開ディレクトリを作成できませんでした', 'github-push' ) );
+			return new WP_Error( 'extract_dir_failed', __( '展開ディレクトリを作成できませんでした', 'push-from-github' ) );
 		}
 		
 		$result = $zip->extractTo( $extract_dir );
 		$zip->close();
 		
 		if ( ! $result ) {
-			return new WP_Error( 'extract_failed', __( 'ZIPファイルの展開に失敗しました', 'github-push' ) );
+			return new WP_Error( 'extract_failed', __( 'ZIPファイルの展開に失敗しました', 'push-from-github' ) );
 		}
 		
 		return $extract_dir;
@@ -210,7 +212,7 @@ class GitHub_Push_Rollback {
 		$files = scandir( $extracted_path );
 		
 		if ( $files === false ) {
-			return new WP_Error( 'scan_failed', __( '展開ディレクトリを読み取れませんでした', 'github-push' ) );
+			return new WP_Error( 'scan_failed', __( '展開ディレクトリを読み取れませんでした', 'push-from-github' ) );
 		}
 		
 		// ディレクトリとファイルを分けて探す
@@ -245,12 +247,12 @@ class GitHub_Push_Rollback {
 			$source_dir = $directories[0];
 		} else {
 			// ディレクトリもファイルもない場合はエラー
-			return new WP_Error( 'no_files_found', __( '展開されたファイルが見つかりませんでした', 'github-push' ) );
+			return new WP_Error( 'no_files_found', __( '展開されたファイルが見つかりませんでした', 'push-from-github' ) );
 		}
 		
 		// プラグインディレクトリを作成
 		if ( ! wp_mkdir_p( $plugin_dir ) ) {
-			return new WP_Error( 'plugin_dir_failed', __( 'プラグインディレクトリを作成できませんでした', 'github-push' ) );
+			return new WP_Error( 'plugin_dir_failed', __( 'プラグインディレクトリを作成できませんでした', 'push-from-github' ) );
 		}
 		
 		// ファイルをコピー
@@ -279,13 +281,13 @@ class GitHub_Push_Rollback {
 		}
 		
 		if ( ! $wp_filesystem ) {
-			return new WP_Error( 'filesystem_not_available', __( 'ファイルシステムにアクセスできません', 'github-push' ) );
+			return new WP_Error( 'filesystem_not_available', __( 'ファイルシステムにアクセスできません', 'push-from-github' ) );
 		}
 		
 		$result = copy_dir( $source, $destination );
 		
 		if ( ! $result ) {
-			return new WP_Error( 'copy_failed', __( 'ファイルのコピーに失敗しました', 'github-push' ) );
+			return new WP_Error( 'copy_failed', __( 'ファイルのコピーに失敗しました', 'push-from-github' ) );
 		}
 		
 		return true;
@@ -322,11 +324,16 @@ class GitHub_Push_Rollback {
 			if ( is_dir( $file_path ) ) {
 				$this->delete_directory( $file_path );
 			} else {
-				unlink( $file_path );
+				wp_delete_file( $file_path );
 			}
 		}
 		
-		return rmdir( $dir );
+		global $wp_filesystem;
+		if ( empty( $wp_filesystem ) ) {
+			require_once ABSPATH . '/wp-admin/includes/file.php';
+			WP_Filesystem();
+		}
+		return $wp_filesystem->rmdir( $dir, true );
 	}
 	
 	/**

@@ -1,15 +1,17 @@
 <?php
 
 /**
- * Plugin Name: WP Push from GitHub
+ * Plugin Name: Push from GitHub
  * Description: 非公開GitHubリポジトリで管理されているWordPressプラグインを自動的に導入・更新するプラグイン
- * Version: 1.1.6
+ * Version: 1.1.9
  * Author: Technophere
- * Author URI: https://technophere.codm
+ * Author URI: https://technophere.com
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: github-push
+ * Text Domain: push-from-github
  * Domain Path: /languages
+ * Requires at least: 5.0
+ * Requires PHP: 7.0
  */
 
 // 直接アクセスを防ぐ
@@ -18,7 +20,7 @@ if (! defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('GITHUB_PUSH_VERSION', '1.0.0');
+define('GITHUB_PUSH_VERSION', '1.1.9');
 define('GITHUB_PUSH_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GITHUB_PUSH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GITHUB_PUSH_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -153,37 +155,37 @@ class GitHub_Push
 	public function add_admin_menu()
 	{
 		add_menu_page(
-			__('WP Push from GitHub', 'github-push'),
-			__('WPGP', 'github-push'),
+			__('Push from GitHub', 'push-from-github'),
+			__('PFG', 'push-from-github'),
 			'manage_options',
-			'github-push',
+			'push-from-github',
 			array($this, 'render_settings_page'),
 			'dashicons-update',
 			30
 		);
 
 		add_submenu_page(
-			'github-push',
-			__('GitHub設定', 'github-push'),
-			__('GitHub設定', 'github-push'),
+			'push-from-github',
+			__('GitHub設定', 'push-from-github'),
+			__('GitHub設定', 'push-from-github'),
 			'manage_options',
-			'github-push',
+			'push-from-github',
 			array($this, 'render_settings_page')
 		);
 
 		add_submenu_page(
-			'github-push',
-			__('ログ', 'github-push'),
-			__('ログ', 'github-push'),
+			'push-from-github',
+			__('ログ', 'push-from-github'),
+			__('ログ', 'push-from-github'),
 			'manage_options',
 			'github-push-logs',
 			array($this, 'render_logs_page')
 		);
 
 		add_submenu_page(
-			'github-push',
-			__('一般設定', 'github-push'),
-			__('一般設定', 'github-push'),
+			'push-from-github',
+			__('一般設定', 'push-from-github'),
+			__('一般設定', 'push-from-github'),
 			'manage_options',
 			'github-push-settings',
 			array($this, 'render_general_settings_page')
@@ -195,7 +197,7 @@ class GitHub_Push
 	 */
 	public function enqueue_admin_assets($hook)
 	{
-		if (strpos($hook, 'github-push') === false) {
+		if (strpos($hook, 'push-from-github') === false && strpos($hook, 'github-push') === false) {
 			return;
 		}
 
@@ -221,11 +223,11 @@ class GitHub_Push
 				'ajaxUrl' => admin_url('admin-ajax.php'),
 				'nonce' => wp_create_nonce('github-push-nonce'),
 				'i18n' => array(
-					'checking' => __('更新をチェック中...', 'github-push'),
-					'updating' => __('更新中...', 'github-push'),
-					'success' => __('更新が完了しました', 'github-push'),
-					'error' => __('エラーが発生しました', 'github-push'),
-					'confirmRollback' => __('本当にロールバックしますか？', 'github-push'),
+					'checking' => __('更新をチェック中...', 'push-from-github'),
+					'updating' => __('更新中...', 'push-from-github'),
+					'success' => __('更新が完了しました', 'push-from-github'),
+					'error' => __('エラーが発生しました', 'push-from-github'),
+					'confirmRollback' => __('本当にロールバックしますか？', 'push-from-github'),
 				),
 			)
 		);
@@ -260,13 +262,13 @@ class GitHub_Push
 		// 設定保存処理
 		if (isset($_POST['github_push_save_general_settings']) && check_admin_referer('github_push_general_settings')) {
 			$options = get_option('github_push_options', array());
-			$options['language'] = isset($_POST['language']) ? sanitize_text_field($_POST['language']) : '';
+			$options['language'] = isset($_POST['language']) ? sanitize_text_field(wp_unslash($_POST['language'])) : '';
 			update_option('github_push_options', $options);
 
 			// テキストドメインを再読み込み
 			$this->load_textdomain();
 
-			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('設定を保存しました', 'github-push') . '</p></div>';
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('設定を保存しました', 'push-from-github') . '</p></div>';
 		}
 
 		$options = get_option('github_push_options', array());
@@ -274,9 +276,9 @@ class GitHub_Push
 
 		// 利用可能な言語リスト
 		$available_languages = array(
-			'' => __('WordPressのデフォルト言語を使用', 'github-push'),
-			'ja' => __('日本語', 'github-push'),
-			'en_US' => __('English (US)', 'github-push'),
+			'' => __('WordPressのデフォルト言語を使用', 'push-from-github'),
+			'ja' => __('日本語', 'push-from-github'),
+			'en_US' => __('English (US)', 'push-from-github'),
 		);
 
 		// プラグインヘッダーからバージョンを取得
@@ -287,7 +289,7 @@ class GitHub_Push
 		$plugin_version = isset($plugin_data['Version']) ? $plugin_data['Version'] : GITHUB_PUSH_VERSION;
 ?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('一般設定', 'github-push'); ?></h1>
+			<h1><?php echo esc_html__('一般設定', 'push-from-github'); ?></h1>
 
 			<form method="post" action="">
 				<?php wp_nonce_field('github_push_general_settings'); ?>
@@ -297,7 +299,7 @@ class GitHub_Push
 					<tbody>
 						<tr>
 							<th scope="row">
-								<label for="language"><?php echo esc_html__('言語', 'github-push'); ?></label>
+								<label for="language"><?php echo esc_html__('言語', 'push-from-github'); ?></label>
 							</th>
 							<td>
 								<select name="language" id="language">
@@ -308,7 +310,7 @@ class GitHub_Push
 									<?php endforeach; ?>
 								</select>
 								<p class="description">
-									<?php echo esc_html__('プラグインの表示言語を選択します。空の場合は、WordPressの設定に従います。', 'github-push'); ?>
+									<?php echo esc_html__('プラグインの表示言語を選択します。空の場合は、WordPressの設定に従います。', 'push-from-github'); ?>
 								</p>
 							</td>
 						</tr>
@@ -316,32 +318,32 @@ class GitHub_Push
 				</table>
 
 				<p class="submit">
-					<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php echo esc_attr__('変更を保存', 'github-push'); ?>">
+					<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php echo esc_attr__('変更を保存', 'push-from-github'); ?>">
 				</p>
 			</form>
 
 			<div class="github-push-plugin-info" style="margin-top: 40px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
-				<h2 style="margin-top: 0; margin-bottom: 15px; font-size: 16px;"><?php echo esc_html__('プラグイン情報', 'github-push'); ?></h2>
+				<h2 style="margin-top: 0; margin-bottom: 15px; font-size: 16px;"><?php echo esc_html__('プラグイン情報', 'push-from-github'); ?></h2>
 				<table class="form-table" style="margin-bottom: 0;">
 					<tbody>
 						<tr>
-							<th scope="row" style="width: 120px; padding: 10px 0;"><?php echo esc_html__('バージョン', 'github-push'); ?></th>
+							<th scope="row" style="width: 120px; padding: 10px 0;"><?php echo esc_html__('バージョン', 'push-from-github'); ?></th>
 							<td style="padding: 10px 0;"><?php echo esc_html($plugin_version); ?></td>
 						</tr>
 						<tr>
-							<th scope="row" style="padding: 10px 0;"><?php echo esc_html__('開発者', 'github-push'); ?></th>
+							<th scope="row" style="padding: 10px 0;"><?php echo esc_html__('開発者', 'push-from-github'); ?></th>
 							<td style="padding: 10px 0;">
-								<a href="https://technophere.com" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('テクノフィア', 'github-push'); ?></a>
+								<a href="https://technophere.com" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('テクノフィア', 'push-from-github'); ?></a>
 							</td>
 						</tr>
 						<tr>
-							<th scope="row" style="padding: 10px 0;"><?php echo esc_html__('お問い合わせ', 'github-push'); ?></th>
+							<th scope="row" style="padding: 10px 0;"><?php echo esc_html__('お問い合わせ', 'push-from-github'); ?></th>
 							<td style="padding: 10px 0;">
-								<a href="https://technophere.com/contact" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('お問い合わせ', 'github-push'); ?></a>
+								<a href="https://technophere.com/contact" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('お問い合わせ', 'push-from-github'); ?></a>
 							</td>
 						</tr>
 						<tr>
-							<th scope="row" style="padding: 10px 0;"><?php echo esc_html__('ライセンス', 'github-push'); ?></th>
+							<th scope="row" style="padding: 10px 0;"><?php echo esc_html__('ライセンス', 'push-from-github'); ?></th>
 							<td style="padding: 10px 0;">GPL v2 or later</td>
 						</tr>
 					</tbody>
@@ -367,7 +369,7 @@ class GitHub_Push
 		$plugin_meta[] = sprintf(
 			'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
 			esc_url('https://technophere.com'),
-			esc_html__('開発者: テクノフィア', 'github-push')
+			esc_html__('開発者: テクノフィア', 'push-from-github')
 		);
 
 		return $plugin_meta;
@@ -381,13 +383,13 @@ class GitHub_Push
 		check_ajax_referer('github-push-nonce', 'nonce');
 
 		if (! current_user_can('manage_options')) {
-			wp_send_json_error(array('message' => __('権限がありません', 'github-push')));
+			wp_send_json_error(array('message' => __('権限がありません', 'push-from-github')));
 		}
 
-		$plugin_id = isset($_POST['plugin_id']) ? sanitize_text_field($_POST['plugin_id']) : '';
+		$plugin_id = isset($_POST['plugin_id']) ? sanitize_text_field(wp_unslash($_POST['plugin_id'])) : '';
 
 		if (empty($plugin_id)) {
-			wp_send_json_error(array('message' => __('プラグインIDが指定されていません', 'github-push')));
+			wp_send_json_error(array('message' => __('プラグインIDが指定されていません', 'push-from-github')));
 		}
 
 		$github_api = GitHub_Push_Github_API::get_instance();
@@ -408,10 +410,12 @@ class GitHub_Push
 		$update_available = isset($result['update_available']) && $result['update_available'];
 
 		if ($update_available) {
-			$message = sprintf(__('更新が利用可能です。現在: %s → 最新: %s', 'github-push'), $current_version, $latest_version);
+			// translators: %1$s: Current version, %2$s: Latest version
+			$message = sprintf(__('更新が利用可能です。現在: %1$s → 最新: %2$s', 'push-from-github'), $current_version, $latest_version);
 			$logger->log($plugin_id, 'version_check', 'success', $message, $latest_version);
 		} else {
-			$message = sprintf(__('更新はありません。現在のバージョン: %s', 'github-push'), $current_version);
+			// translators: %s: Current version
+			$message = sprintf(__('更新はありません。現在のバージョン: %s', 'push-from-github'), $current_version);
 			$logger->log($plugin_id, 'version_check', 'info', $message, $current_version);
 		}
 
@@ -426,13 +430,13 @@ class GitHub_Push
 		check_ajax_referer('github-push-nonce', 'nonce');
 
 		if (! current_user_can('manage_options')) {
-			wp_send_json_error(array('message' => __('権限がありません', 'github-push')));
+			wp_send_json_error(array('message' => __('権限がありません', 'push-from-github')));
 		}
 
-		$plugin_id = isset($_POST['plugin_id']) ? sanitize_text_field($_POST['plugin_id']) : '';
+		$plugin_id = isset($_POST['plugin_id']) ? sanitize_text_field(wp_unslash($_POST['plugin_id'])) : '';
 
 		if (empty($plugin_id)) {
-			wp_send_json_error(array('message' => __('プラグインIDが指定されていません', 'github-push')));
+			wp_send_json_error(array('message' => __('プラグインIDが指定されていません', 'push-from-github')));
 		}
 
 		$updater = GitHub_Push_Updater::get_instance();
@@ -453,14 +457,14 @@ class GitHub_Push
 		check_ajax_referer('github-push-nonce', 'nonce');
 
 		if (! current_user_can('manage_options')) {
-			wp_send_json_error(array('message' => __('権限がありません', 'github-push')));
+			wp_send_json_error(array('message' => __('権限がありません', 'push-from-github')));
 		}
 
-		$repo_url = isset($_POST['repo_url']) ? esc_url_raw($_POST['repo_url']) : '';
-		$token = isset($_POST['token']) ? sanitize_text_field($_POST['token']) : '';
+		$repo_url = isset($_POST['repo_url']) ? esc_url_raw(wp_unslash($_POST['repo_url'])) : '';
+		$token = isset($_POST['token']) ? sanitize_text_field(wp_unslash($_POST['token'])) : '';
 
 		if (empty($repo_url)) {
-			wp_send_json_error(array('message' => __('リポジトリURLが指定されていません', 'github-push')));
+			wp_send_json_error(array('message' => __('リポジトリURLが指定されていません', 'push-from-github')));
 		}
 
 		$github_api = GitHub_Push_Github_API::get_instance();
@@ -481,15 +485,15 @@ class GitHub_Push
 		check_ajax_referer('github-push-nonce', 'nonce');
 
 		if (! current_user_can('manage_options')) {
-			wp_send_json_error(array('message' => __('権限がありません', 'github-push')));
+			wp_send_json_error(array('message' => __('権限がありません', 'push-from-github')));
 		}
 
-		$plugin_id = isset($_POST['plugin_id']) ? sanitize_text_field($_POST['plugin_id']) : '';
-		$backup_path = isset($_POST['backup_path']) ? sanitize_text_field($_POST['backup_path']) : '';
-		$version = isset($_POST['version']) ? sanitize_text_field($_POST['version']) : '';
+		$plugin_id = isset($_POST['plugin_id']) ? sanitize_text_field(wp_unslash($_POST['plugin_id'])) : '';
+		$backup_path = isset($_POST['backup_path']) ? sanitize_text_field(wp_unslash($_POST['backup_path'])) : '';
+		$version = isset($_POST['version']) ? sanitize_text_field(wp_unslash($_POST['version'])) : '';
 
 		if (empty($plugin_id)) {
-			wp_send_json_error(array('message' => __('プラグインIDが指定されていません', 'github-push')));
+			wp_send_json_error(array('message' => __('プラグインIDが指定されていません', 'push-from-github')));
 		}
 
 		$rollback = GitHub_Push_Rollback::get_instance();
@@ -547,24 +551,12 @@ class GitHub_Push
 
 	/**
 	 * テキストドメインを読み込み
+	 * WordPress.orgでホストされる場合は自動的に読み込まれるため、この関数は空にします
 	 */
 	private function load_textdomain()
 	{
-		$options = get_option('github_push_options', array());
-		$language = isset($options['language']) ? $options['language'] : '';
-
-		// テキストドメインを読み込み
-		$domain = 'github-push';
-		$locale = !empty($language) ? $language : determine_locale();
-		$mofile = GITHUB_PUSH_PLUGIN_DIR . 'languages/' . $domain . '-' . $locale . '.mo';
-
-		// ファイルが存在する場合のみ読み込み
-		if (file_exists($mofile)) {
-			load_textdomain($domain, $mofile);
-		} else {
-			// ファイルが存在しない場合は、標準のload_plugin_textdomainを使用
-			load_plugin_textdomain($domain, false, dirname(GITHUB_PUSH_PLUGIN_BASENAME) . '/languages');
-		}
+		// WordPress.orgでホストされる場合は、WordPressが自動的に翻訳を読み込みます
+		// 手動で読み込む必要はありません
 	}
 }
 

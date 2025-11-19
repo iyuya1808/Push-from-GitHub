@@ -43,15 +43,30 @@ class GitHub_Push_Settings {
 	 * 設定を登録
 	 */
 	public function register_settings() {
-		register_setting( 'github_push_options', 'github_push_options' );
+		register_setting( 'github_push_options', 'github_push_options', array(
+			'sanitize_callback' => array( $this, 'sanitize_options' ),
+		) );
+	}
+	
+	/**
+	 * オプションをサニタイズ
+	 */
+	public function sanitize_options( $input ) {
+		$sanitized = array();
+		if ( is_array( $input ) ) {
+			foreach ( $input as $key => $value ) {
+				$sanitized[ $key ] = sanitize_text_field( $value );
+			}
+		}
+		return $sanitized;
 	}
 	
 	/**
 	 * 設定画面を表示
 	 */
 	public function render_page() {
-		$action = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : 'list';
-		$plugin_id = isset( $_GET['plugin_id'] ) ? sanitize_text_field( $_GET['plugin_id'] ) : '';
+		$action = isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : 'list';
+		$plugin_id = isset( $_GET['plugin_id'] ) ? sanitize_text_field( wp_unslash( $_GET['plugin_id'] ) ) : '';
 		
 		if ( $action === 'edit' ) {
 			$this->render_edit_form( $plugin_id );
@@ -110,18 +125,18 @@ class GitHub_Push_Settings {
 		check_admin_referer( 'github_push_save_plugin' );
 		
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( __( '権限がありません', 'github-push' ) );
+			wp_die( esc_html__( '権限がありません', 'push-from-github' ) );
 		}
 		
-		$plugin_id = isset( $_POST['plugin_id'] ) ? sanitize_text_field( $_POST['plugin_id'] ) : '';
-		$repo_url = isset( $_POST['repo_url'] ) ? esc_url_raw( $_POST['repo_url'] ) : '';
-		$branch = isset( $_POST['branch'] ) ? sanitize_text_field( $_POST['branch'] ) : 'main';
-		$plugin_slug = isset( $_POST['plugin_slug'] ) ? sanitize_text_field( $_POST['plugin_slug'] ) : '';
-		$token = isset( $_POST['token'] ) ? sanitize_text_field( $_POST['token'] ) : '';
+		$plugin_id = isset( $_POST['plugin_id'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_id'] ) ) : '';
+		$repo_url = isset( $_POST['repo_url'] ) ? esc_url_raw( wp_unslash( $_POST['repo_url'] ) ) : '';
+		$branch = isset( $_POST['branch'] ) ? sanitize_text_field( wp_unslash( $_POST['branch'] ) ) : 'main';
+		$plugin_slug = isset( $_POST['plugin_slug'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_slug'] ) ) : '';
+		$token = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
 		$use_tags = isset( $_POST['use_tags'] ) ? (bool) $_POST['use_tags'] : false;
 		
 		if ( empty( $repo_url ) || empty( $plugin_slug ) ) {
-			wp_redirect( add_query_arg( array( 'page' => 'github-push', 'error' => 'missing_fields' ), admin_url( 'admin.php' ) ) );
+			wp_safe_redirect( add_query_arg( array( 'page' => 'push-from-github', 'error' => 'missing_fields' ), admin_url( 'admin.php' ) ) );
 			exit;
 		}
 		
@@ -133,8 +148,8 @@ class GitHub_Push_Settings {
 		if ( is_wp_error( $validation_result ) ) {
 			$error_code = $validation_result->get_error_code();
 			$error_message = $validation_result->get_error_message();
-			wp_redirect( add_query_arg( array( 
-				'page' => 'github-push', 
+			wp_safe_redirect( add_query_arg( array( 
+				'page' => 'push-from-github', 
 				'action' => 'edit',
 				'plugin_id' => $plugin_id,
 				'error' => $error_code,
@@ -151,7 +166,7 @@ class GitHub_Push_Settings {
 			if ( ! is_wp_error( $repo_info ) ) {
 				$plugin_name = $repo_info['repo'];
 			} else {
-				$plugin_name = __( '不明なプラグイン', 'github-push' );
+				$plugin_name = __( '不明なプラグイン', 'push-from-github' );
 			}
 		} else {
 			// リポジトリ名を整形
@@ -180,7 +195,7 @@ class GitHub_Push_Settings {
 		
 		update_option( 'github_push_plugins', $plugins );
 		
-		wp_redirect( add_query_arg( array( 'page' => 'github-push', 'message' => 'saved' ), admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( array( 'page' => 'push-from-github', 'message' => 'saved' ), admin_url( 'admin.php' ) ) );
 		exit;
 	}
 	
@@ -191,13 +206,13 @@ class GitHub_Push_Settings {
 		check_admin_referer( 'github_push_delete_plugin' );
 		
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( __( '権限がありません', 'github-push' ) );
+			wp_die( esc_html__( '権限がありません', 'push-from-github' ) );
 		}
 		
-		$plugin_id = isset( $_GET['plugin_id'] ) ? sanitize_text_field( $_GET['plugin_id'] ) : '';
+		$plugin_id = isset( $_GET['plugin_id'] ) ? sanitize_text_field( wp_unslash( $_GET['plugin_id'] ) ) : '';
 		
 		if ( empty( $plugin_id ) ) {
-			wp_redirect( add_query_arg( array( 'page' => 'github-push', 'error' => 'plugin_not_found' ), admin_url( 'admin.php' ) ) );
+			wp_safe_redirect( add_query_arg( array( 'page' => 'push-from-github', 'error' => 'plugin_not_found' ), admin_url( 'admin.php' ) ) );
 			exit;
 		}
 		
@@ -208,7 +223,7 @@ class GitHub_Push_Settings {
 			update_option( 'github_push_plugins', $plugins );
 		}
 		
-		wp_redirect( add_query_arg( array( 'page' => 'github-push', 'message' => 'deleted' ), admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( array( 'page' => 'push-from-github', 'message' => 'deleted' ), admin_url( 'admin.php' ) ) );
 		exit;
 	}
 }

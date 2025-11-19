@@ -53,7 +53,8 @@ class GitHub_Push_Notifications
 		}
 
 		$message = sprintf(
-			__('プラグイン "%s" が %s に更新されました。', 'github-push'),
+			// translators: %1$s: Plugin name, %2$s: Version number
+			__('プラグイン "%1$s" が %2$s に更新されました。', 'push-from-github'),
 			$plugin['plugin_name'],
 			$version
 		);
@@ -83,7 +84,8 @@ class GitHub_Push_Notifications
 		}
 
 		$message = sprintf(
-			__('プラグイン "%s" がロールバックされました。', 'github-push'),
+			// translators: %s: Plugin name
+			__('プラグイン "%s" がロールバックされました。', 'push-from-github'),
 			$plugin['plugin_name']
 		);
 
@@ -113,7 +115,8 @@ class GitHub_Push_Notifications
 		}
 
 		$message = sprintf(
-			__('プラグイン "%s" の新しいバージョン %s が利用可能です。', 'github-push'),
+			// translators: %1$s: Plugin name, %2$s: Version number
+			__('プラグイン "%1$s" の新しいバージョン %2$s が利用可能です。', 'push-from-github'),
 			$plugin['plugin_name'],
 			$version
 		);
@@ -144,7 +147,8 @@ class GitHub_Push_Notifications
 		}
 
 		$message = sprintf(
-			__('プラグイン "%s" の更新中にエラーが発生しました: %s', 'github-push'),
+			// translators: %1$s: Plugin name, %2$s: Error message
+			__('プラグイン "%1$s" の更新中にエラーが発生しました: %2$s', 'push-from-github'),
 			$plugin['plugin_name'],
 			$error_message
 		);
@@ -212,12 +216,14 @@ class GitHub_Push_Notifications
 		$subject = sprintf(
 			'[%s] %s',
 			get_bloginfo('name'),
-			__('WP Push from GitHub 通知', 'github-push')
+			__('Push from GitHub 通知', 'push-from-github')
 		);
 
 		$body = $message . "\n\n";
-		$body .= sprintf(__('サイト: %s', 'github-push'), home_url()) . "\n";
-		$body .= sprintf(__('日時: %s', 'github-push'), current_time('mysql')) . "\n";
+		// translators: %s: Site URL
+		$body .= sprintf(__('サイト: %s', 'push-from-github'), home_url()) . "\n";
+		// translators: %s: Date and time
+		$body .= sprintf(__('日時: %s', 'push-from-github'), current_time('mysql')) . "\n";
 
 		wp_mail($admin_email, $subject, $body);
 	}

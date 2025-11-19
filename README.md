@@ -1,10 +1,19 @@
-# WP Push from GitHub
+=== Push from GitHub ===
 
-非公開GitHubリポジトリで管理されているWordPressプラグインを自動的に導入・更新するプラグイン
+Contributors: iyuya0623
+Tags: github, plugin management, updates, private repository, deployment
+Requires at least: 5.0
+Tested up to: 6.8
+Stable tag: 1.1.9
+Requires PHP: 7.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+GitHubで管理されているWordPressプラグインを自動的に導入・更新するプラグイン。非公開リポジトリにも対応。  
 
 ## 概要
 
-WP Push from GitHubは、GitHubで管理されているWordPressプラグインをWordPress管理画面から直接管理できるプラグインです。公開リポジトリだけでなく、非公開リポジトリにも対応しており、Personal Access Tokenを使用してアクセスできます。
+Push from GitHubは、GitHubで管理されているWordPressプラグインをWordPress管理画面から直接管理できるプラグインです。公開リポジトリだけでなく、非公開リポジトリにも対応しており、Personal Access Tokenを使用してアクセスできます。
 
 ## 主な機能
 
@@ -28,14 +37,14 @@ WP Push from GitHubは、GitHubで管理されているWordPressプラグイン�
 ## インストール
 
 1. プラグインディレクトリに `github-push` フォルダをアップロード
-2. WordPress管理画面の「プラグイン」メニューから「WP Push from GitHub」を有効化
-3. 管理画面の「WPGP」メニューから設定を開始
+2. WordPress管理画面の「プラグイン」メニューから「Push from GitHub」を有効化
+3. 管理画面の「PFG」メニューから設定を開始
 
 ## 使用方法
 
 ### 1. プラグインの登録
 
-1. 管理画面の「WPGP」→「GitHub設定」にアクセス
+1. 管理画面の「PFG」→「GitHub設定」にアクセス
 2. 「追加」ボタンをクリック
 3. 以下の情報を入力:
    - **GitHubリポジトリURL**: 管理したいGitHubリポジトリのURL
@@ -57,13 +66,13 @@ WP Push from GitHubは、GitHubで管理されているWordPressプラグイン�
 
 ### 4. ログの確認
 
-- 「WPGP」→「ログ」からすべての操作履歴を確認
+- 「PFG」→「ログ」からすべての操作履歴を確認
 - プラグイン別にフィルタリング可能
 - ページネーション対応
 
 ### 5. 一般設定
 
-- 「WPGP」→「一般設定」から言語設定を変更可能
+- 「PFG」→「一般設定」から言語設定を変更可能
 - プラグイン情報の確認
 
 ## 更新方法について
@@ -215,13 +224,71 @@ GPL v2 or later
 - ウェブサイト: https://technophere.com
 - お問い合わせ: https://technophere.com/contact
 
-## バージョン履歴
+## == Frequently Asked Questions ==
+
+### 非公開リポジトリを使用できますか？
+
+はい、Personal Access Tokenを使用することで非公開リポジトリにもアクセスできます。GitHubのSettings > Developer settings > Personal access tokensからトークンを生成してください。
+
+### どのような更新方法がありますか？
+
+タグ（リリース）またはブランチから更新を取得できます。タグを使用する場合はセマンティックバージョニングに適しており、ブランチを使用する場合は継続的な開発に適しています。
+
+### バックアップは自動的に作成されますか？
+
+はい、更新前に自動的にバックアップが作成されます。各プラグインにつき最大5つのバックアップを保持し、古いものから自動削除されます。
+
+### ロールバックは可能ですか？
+
+はい、ログページから過去の更新履歴を確認し、「このバージョンに戻す」ボタンでワンクリックでロールバック可能です。
+
+### PHPのZipArchive拡張機能が必要ですか？
+
+はい、ZIPファイルの展開に必要です。サーバーで有効になっているか確認してください。
+
+## == Changelog ==
+
+### 1.1.9
+* 現在のバージョン
+
+### 1.1.8
+* セキュリティ改善とコード品質向上
+
+### 1.1.6
+* バグ修正とパフォーマンス改善
 
 ### 1.1.5
-- 現在のバージョン
+* バグ修正とパフォーマンス改善
 
 ### 1.0.0
-- 初回リリース
+* 初回リリース
+* GitHubリポジトリ連携機能
+* 非公開リポジトリ対応
+* 自動バックアップ機能
+* ロールバック機能
+* ログ機能
+* 通知機能
+* 多言語対応（日本語、英語）
+
+## == Upgrade Notice ==
+
+### 1.1.9
+推奨アップグレード。セキュリティ改善とコード品質向上が含まれています。
+
+### 1.1.8
+推奨アップグレード。セキュリティ改善とコード品質向上が含まれています。
+
+### 1.1.6
+推奨アップグレード。バグ修正とパフォーマンス改善が含まれています。
+
+### 1.0.0
+初回リリースです。新規インストールをお試しください。
+
+## == Screenshots ==
+
+1. プラグイン設定画面 - GitHubリポジトリの登録と管理
+2. ログ画面 - すべての操作履歴の確認
+3. 一般設定画面 - 言語設定とプラグイン情報
 
 ## サポート
 

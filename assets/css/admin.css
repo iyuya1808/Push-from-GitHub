@@ -85,7 +85,8 @@
 	margin-right: 10px;
 }
 
-.status {
+.wp-list-table .status,
+.wp-list-table .action {
 	display: inline-block;
 	padding: 3px 8px;
 	border-radius: 3px;
@@ -94,24 +95,44 @@
 	text-transform: uppercase;
 }
 
-.status-success {
-	background: #46b450;
-	color: #fff;
+.wp-list-table .status-success {
+	background: #46b450 !important;
+	color: #fff !important;
 }
 
-.status-error {
-	background: #dc3232;
-	color: #fff;
+.wp-list-table .status-error {
+	background: #dc3232 !important;
+	color: #fff !important;
 }
 
-.status-info {
-	background: #00a0d2;
-	color: #fff;
+.wp-list-table .status-info {
+	background: #00a0d2 !important;
+	color: #fff !important;
 }
 
-.status-warning {
-	background: #f0b849;
-	color: #fff;
+.wp-list-table .status-warning {
+	background: #f0b849 !important;
+	color: #fff !important;
+}
+
+.wp-list-table .action.action-version_check {
+	background: #0073aa !important;
+	color: #fff !important;
+}
+
+.wp-list-table .action.action-update {
+	background: #00a32a !important;
+	color: #fff !important;
+}
+
+.wp-list-table .action.action-rollback {
+	background: #d63638 !important;
+	color: #fff !important;
+}
+
+.wp-list-table .action.action-backup {
+	background: #826eb4 !important;
+	color: #fff !important;
 }
 
 .required {

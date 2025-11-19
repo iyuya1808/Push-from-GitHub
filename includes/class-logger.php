@@ -126,11 +126,11 @@ class GitHub_Push_Logger
 			return array();
 		}
 
-		$where = '';
+		$where_clause = '';
 		$params = array();
 
 		if (! empty($plugin_id)) {
-			$where = 'WHERE plugin_id = %s';
+			$where_clause = 'WHERE plugin_id = %s';
 			$params[] = $plugin_id;
 		}
 
@@ -138,15 +138,13 @@ class GitHub_Push_Logger
 		$params[] = $limit;
 		$params[] = $offset;
 
-		$query = "SELECT * FROM $table_name $where ORDER BY created_at DESC LIMIT %d OFFSET %d";
+		// テーブル名は安全な値なので直接使用
+		$table_name_escaped = esc_sql($table_name);
+		$query = "SELECT * FROM `{$table_name_escaped}` {$where_clause} ORDER BY created_at DESC LIMIT %d OFFSET %d";
 
-		if (! empty($params)) {
-			$prepared_query = $wpdb->prepare($query, $params);
-		} else {
-			// この分岐は実際には到達しないが、念のため
-			$prepared_query = $wpdb->prepare($query, $limit, $offset);
-		}
-
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $wpdb->prepare()で準備済み
+		$prepared_query = $wpdb->prepare($query, $params);
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $prepared_queryは$wpdb->prepare()の結果
 		$results = $wpdb->get_results($prepared_query, ARRAY_A);
 
 		// エラーが発生した場合はログに記録
@@ -174,15 +172,27 @@ class GitHub_Push_Logger
 			return 0;
 		}
 
-		$where = '';
+		$where_clause = '';
+		$params = array();
 
 		if (! empty($plugin_id)) {
-			$where = $wpdb->prepare('WHERE plugin_id = %s', $plugin_id);
+			$where_clause = 'WHERE plugin_id = %s';
+			$params[] = $plugin_id;
 		}
 
-		$query = "SELECT COUNT(*) FROM $table_name $where";
+		// テーブル名は安全な値なので直接使用
+		$table_name_escaped = esc_sql($table_name);
+		$query = "SELECT COUNT(*) FROM `{$table_name_escaped}` {$where_clause}";
 
-		return (int) $wpdb->get_var($query);
+		if (! empty($params)) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $wpdb->prepare()で準備済み
+			$prepared_query = $wpdb->prepare($query, $params);
+		} else {
+			$prepared_query = $query;
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $prepared_queryは$wpdb->prepare()の結果または安全なクエリ
+		return (int) $wpdb->get_var($prepared_query);
 	}
 
 	/**
@@ -218,53 +228,53 @@ class GitHub_Push_Logger
 		if (defined('WP_DEBUG') && WP_DEBUG) {
 			$debug_info = sprintf(
 				'<div class="notice notice-info"><p>%s: %s=%s, %s=%d, %s=%d, %s=%s</p></div>',
-				__('デバッグ情報', 'github-push'),
-				__('テーブル存在', 'github-push'),
+				__('デバッグ情報', 'push-from-github'),
+				__('テーブル存在', 'push-from-github'),
 				$table_exists ? 'true' : 'false',
-				__('ログ件数', 'github-push'),
+				__('ログ件数', 'push-from-github'),
 				$total_logs,
-				__('取得件数', 'github-push'),
+				__('取得件数', 'push-from-github'),
 				count($logs),
-				__('エラー', 'github-push'),
-				$wpdb->last_error ? esc_html($wpdb->last_error) : __('なし', 'github-push')
+				__('エラー', 'push-from-github'),
+				$wpdb->last_error ? esc_html($wpdb->last_error) : __('なし', 'push-from-github')
 			);
 		}
 ?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('ログ', 'github-push'); ?></h1>
-			<?php echo $debug_info; ?>
+			<h1><?php echo esc_html__('ログ', 'push-from-github'); ?></h1>
+			<?php echo wp_kses_post($debug_info); ?>
 
 			<div class="github-push-logs-filter">
 				<form method="get" action="">
 					<input type="hidden" name="page" value="github-push-logs">
 					<select name="plugin_id">
-						<option value=""><?php echo esc_html__('すべてのプラグイン', 'github-push'); ?></option>
+						<option value=""><?php echo esc_html__('すべてのプラグイン', 'push-from-github'); ?></option>
 						<?php foreach ($plugins as $id => $plugin) : ?>
 							<option value="<?php echo esc_attr($id); ?>" <?php selected($plugin_id, $id); ?>>
 								<?php echo esc_html($plugin['plugin_name']); ?>
 							</option>
 						<?php endforeach; ?>
 					</select>
-					<input type="submit" class="button" value="<?php echo esc_attr__('フィルター', 'github-push'); ?>">
+					<input type="submit" class="button" value="<?php echo esc_attr__('フィルター', 'push-from-github'); ?>">
 				</form>
 			</div>
 
 			<table class="wp-list-table widefat fixed striped">
 				<thead>
 					<tr>
-						<th><?php echo esc_html__('日時', 'github-push'); ?></th>
-						<th><?php echo esc_html__('プラグイン', 'github-push'); ?></th>
-						<th><?php echo esc_html__('アクション', 'github-push'); ?></th>
-						<th><?php echo esc_html__('ステータス', 'github-push'); ?></th>
-						<th><?php echo esc_html__('バージョン', 'github-push'); ?></th>
-						<th><?php echo esc_html__('メッセージ', 'github-push'); ?></th>
-						<th><?php echo esc_html__('操作', 'github-push'); ?></th>
+						<th><?php echo esc_html__('日時', 'push-from-github'); ?></th>
+						<th><?php echo esc_html__('プラグイン', 'push-from-github'); ?></th>
+						<th><?php echo esc_html__('アクション', 'push-from-github'); ?></th>
+						<th><?php echo esc_html__('ステータス', 'push-from-github'); ?></th>
+						<th><?php echo esc_html__('バージョン', 'push-from-github'); ?></th>
+						<th><?php echo esc_html__('メッセージ', 'push-from-github'); ?></th>
+						<th><?php echo esc_html__('操作', 'push-from-github'); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php if (empty($logs)) : ?>
 						<tr>
-							<td colspan="7"><?php echo esc_html__('ログがありません', 'github-push'); ?></td>
+							<td colspan="7"><?php echo esc_html__('ログがありません', 'push-from-github'); ?></td>
 						</tr>
 					<?php else : ?>
 						<?php
@@ -322,7 +332,11 @@ class GitHub_Push_Logger
 									}
 									?>
 								</td>
-								<td><?php echo esc_html($this->translate_action($log['action'])); ?></td>
+								<td>
+									<span class="action action-<?php echo esc_attr($log['action']); ?>">
+										<?php echo esc_html($this->translate_action($log['action'])); ?>
+									</span>
+								</td>
 								<td>
 									<span class="status status-<?php echo esc_attr($log['status']); ?>">
 										<?php echo esc_html($this->translate_status($log['status'])); ?>
@@ -338,9 +352,10 @@ class GitHub_Push_Logger
 											data-backup-path="<?php echo esc_attr($backup_path); ?>">
 											<?php
 											if (! empty($backup_version)) {
-												printf(esc_html__('バージョン %s に戻す', 'github-push'), esc_html($backup_version));
+												// translators: %s: Version number
+												printf(esc_html__('バージョン %s に戻す', 'push-from-github'), esc_html($backup_version));
 											} else {
-												echo esc_html__('このバージョンに戻す', 'github-push');
+												echo esc_html__('このバージョンに戻す', 'push-from-github');
 											}
 											?>
 										</button>
@@ -365,7 +380,8 @@ class GitHub_Push_Logger
 							'current' => $paged,
 						));
 
-						echo $page_links;
+						// paginate_links()は安全なHTMLを返すため、エスケープ不要だが、規約に従ってエスケープ
+						echo wp_kses_post($page_links);
 						?>
 					</div>
 				</div>
@@ -383,10 +399,10 @@ class GitHub_Push_Logger
 	private function translate_action($action)
 	{
 		$actions = array(
-			'version_check' => __('バージョンチェック', 'github-push'),
-			'update' => __('更新', 'github-push'),
-			'rollback' => __('ロールバック', 'github-push'),
-			'backup' => __('バックアップ', 'github-push'),
+			'version_check' => __('バージョンチェック', 'push-from-github'),
+			'update' => __('更新', 'push-from-github'),
+			'rollback' => __('ロールバック', 'push-from-github'),
+			'backup' => __('バックアップ', 'push-from-github'),
 		);
 
 		return isset($actions[$action]) ? $actions[$action] : $action;
@@ -401,10 +417,10 @@ class GitHub_Push_Logger
 	private function translate_status($status)
 	{
 		$statuses = array(
-			'success' => __('成功', 'github-push'),
-			'error' => __('エラー', 'github-push'),
-			'info' => __('情報', 'github-push'),
-			'warning' => __('警告', 'github-push'),
+			'success' => __('成功', 'push-from-github'),
+			'error' => __('エラー', 'push-from-github'),
+			'info' => __('情報', 'push-from-github'),
+			'warning' => __('警告', 'push-from-github'),
 		);
 
 		return isset($statuses[$status]) ? $statuses[$status] : $status;
@@ -421,7 +437,7 @@ class GitHub_Push_Logger
 	{
 		// 自動更新チェックのプレフィックスを翻訳
 		if (strpos($message, '自動更新チェック:') === 0) {
-			$translated_prefix = __('自動更新チェック:', 'github-push');
+			$translated_prefix = __('自動更新チェック:', 'push-from-github');
 			$rest = trim(substr($message, strlen('自動更新チェック:')));
 			// 残りの部分も翻訳を試みる
 			$rest_translated = $this->translate_message_content($rest);
@@ -442,9 +458,15 @@ class GitHub_Push_Logger
 	{
 		// 一般的なメッセージパターンを翻訳
 		$patterns = array(
-			'/^更新が利用可能です。現在: (.+) → 最新: (.+)$/u' => __('更新が利用可能です。現在: %s → 最新: %s', 'github-push'),
-			'/^更新はありません。現在のバージョン: (.+)$/u' => __('更新はありません。現在のバージョン: %s', 'github-push'),
-			'/^プラグインを (.+) に更新しました$/u' => __('プラグインを %s に更新しました', 'github-push'),
+			'/^更新が利用可能です。現在: (.+) → 最新: (.+)$/u' =>
+			// translators: %1$s: Current version, %2$s: Latest version
+			__('更新が利用可能です。現在: %1$s → 最新: %2$s', 'push-from-github'),
+			'/^更新はありません。現在のバージョン: (.+)$/u' =>
+			// translators: %s: Current version
+			__('更新はありません。現在のバージョン: %s', 'push-from-github'),
+			'/^プラグインを (.+) に更新しました$/u' =>
+			// translators: %s: Version number
+			__('プラグインを %s に更新しました', 'push-from-github'),
 		);
 
 		foreach ($patterns as $pattern => $translation_template) {
