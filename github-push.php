@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Push from GitHub
  * Description: 非公開GitHubリポジトリで管理されているWordPressプラグインを自動的に導入・更新するプラグイン
- * Version: 1.1.9
+ * Version: 1.1.10
  * Author: Technophere
  * Author URI: https://technophere.com
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if (! defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('GITHUB_PUSH_VERSION', '1.1.9');
+define('GITHUB_PUSH_VERSION', '1.1.10');
 define('GITHUB_PUSH_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GITHUB_PUSH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GITHUB_PUSH_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -190,6 +190,16 @@ class GitHub_Push
 			'github-push-settings',
 			array($this, 'render_general_settings_page')
 		);
+
+		// github-pushというページスラッグでもアクセスできるようにする（後方互換性のため）
+		add_submenu_page(
+			'push-from-github',
+			__('Push from GitHub', 'push-from-github'),
+			'',
+			'manage_options',
+			'github-push',
+			array($this, 'render_settings_page')
+		);
 	}
 
 	/**
@@ -238,6 +248,10 @@ class GitHub_Push
 	 */
 	public function render_settings_page()
 	{
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('このページにアクセスする権限がありません。', 'push-from-github'));
+		}
+
 		if (class_exists('GitHub_Push_Settings')) {
 			GitHub_Push_Settings::get_instance()->render_page();
 		}
@@ -248,6 +262,10 @@ class GitHub_Push
 	 */
 	public function render_logs_page()
 	{
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('このページにアクセスする権限がありません。', 'push-from-github'));
+		}
+
 		if (class_exists('GitHub_Push_Logger')) {
 			$logger = GitHub_Push_Logger::get_instance();
 			$logger->render_logs_page();
@@ -259,6 +277,10 @@ class GitHub_Push
 	 */
 	public function render_general_settings_page()
 	{
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('このページにアクセスする権限がありません。', 'push-from-github'));
+		}
+
 		// 設定保存処理
 		if (isset($_POST['github_push_save_general_settings']) && check_admin_referer('github_push_general_settings')) {
 			$options = get_option('github_push_options', array());
