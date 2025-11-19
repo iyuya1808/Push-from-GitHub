@@ -494,3 +494,35 @@ msgstr ""
 msgid "不明なプラグイン"
 msgstr ""
 
+#: github-push.php:318
+msgid "プラグイン情報"
+msgstr ""
+
+#: github-push.php:322
+msgid "バージョン"
+msgstr ""
+
+#: github-push.php:326
+msgid "開発者"
+msgstr ""
+
+#: github-push.php:328
+msgid "テクノフィア"
+msgstr ""
+
+#: github-push.php:332
+msgid "公式サイト"
+msgstr ""
+
+#: github-push.php:338
+msgid "お問い合わせ"
+msgstr ""
+
+#: github-push.php:344
+msgid "ライセンス"
+msgstr ""
+
+#: github-push.php:370
+msgid "開発者: テクノフィア"
+msgstr ""
+

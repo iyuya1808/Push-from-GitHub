@@ -101,6 +101,7 @@ class GitHub_Push
 			add_action('admin_init', array($this, 'admin_init'));
 			add_action('admin_menu', array($this, 'add_admin_menu'));
 			add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
+			add_filter('plugin_row_meta', array($this, 'add_plugin_row_meta'), 10, 2);
 		}
 
 		// Ajax処理
@@ -278,6 +279,13 @@ class GitHub_Push
 			'ja' => __('日本語', 'github-push'),
 			'en_US' => __('English (US)', 'github-push'),
 		);
+
+		// プラグインヘッダーからバージョンを取得
+		if (!function_exists('get_plugin_data')) {
+			require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+		}
+		$plugin_data = get_plugin_data(__FILE__);
+		$plugin_version = isset($plugin_data['Version']) ? $plugin_data['Version'] : GITHUB_PUSH_VERSION;
 ?>
 		<div class="wrap">
 			<h1><?php echo esc_html__('一般設定', 'github-push'); ?></h1>
@@ -312,8 +320,58 @@ class GitHub_Push
 					<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php echo esc_attr__('変更を保存', 'github-push'); ?>">
 				</p>
 			</form>
+
+			<div class="github-push-plugin-info" style="margin-top: 40px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+				<h2 style="margin-top: 0; margin-bottom: 15px; font-size: 16px;"><?php echo esc_html__('プラグイン情報', 'github-push'); ?></h2>
+				<table class="form-table" style="margin-bottom: 0;">
+					<tbody>
+						<tr>
+							<th scope="row" style="width: 120px; padding: 10px 0;"><?php echo esc_html__('バージョン', 'github-push'); ?></th>
+							<td style="padding: 10px 0;"><?php echo esc_html($plugin_version); ?></td>
+						</tr>
+						<tr>
+							<th scope="row" style="padding: 10px 0;"><?php echo esc_html__('開発者', 'github-push'); ?></th>
+							<td style="padding: 10px 0;">
+								<a href="https://technophere.com" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('テクノフィア', 'github-push'); ?></a>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row" style="padding: 10px 0;"><?php echo esc_html__('お問い合わせ', 'github-push'); ?></th>
+							<td style="padding: 10px 0;">
+								<a href="https://technophere.com/contact" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('お問い合わせ', 'github-push'); ?></a>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row" style="padding: 10px 0;"><?php echo esc_html__('ライセンス', 'github-push'); ?></th>
+							<td style="padding: 10px 0;">GPL v2 or later</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 <?php
+	}
+
+	/**
+	 * プラグイン一覧ページにメタ情報を追加
+	 *
+	 * @param array $plugin_meta 既存のメタ情報
+	 * @param string $plugin_file プラグインファイル
+	 * @return array メタ情報
+	 */
+	public function add_plugin_row_meta($plugin_meta, $plugin_file)
+	{
+		if (GITHUB_PUSH_PLUGIN_BASENAME !== $plugin_file) {
+			return $plugin_meta;
+		}
+
+		$plugin_meta[] = sprintf(
+			'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+			esc_url('https://technophere.com'),
+			esc_html__('開発者: テクノフィア', 'github-push')
+		);
+
+		return $plugin_meta;
 	}
 
 	/**

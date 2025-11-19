@@ -146,43 +146,20 @@ $use_tags = isset( $plugin['use_tags'] ) ? $plugin['use_tags'] : false;
 					<td>
 						<input type="password" id="token" name="token" value="<?php echo esc_attr( $token ); ?>" class="regular-text">
 						<p class="description">
-							<strong><?php echo esc_html__( 'Personal Access Token（PAT）とは:', 'github-push' ); ?></strong>
+							<?php echo esc_html__( 'GitHub APIにアクセスするための認証トークンです。', 'github-push' ); ?>
 							<br>
-							<?php echo esc_html__( 'GitHub APIにアクセスするための認証トークンです。非公開リポジトリにアクセスする場合や、APIレート制限を緩和するために使用します。', 'github-push' ); ?>
-							<br><br>
 							<strong><?php echo esc_html__( '必要な場合:', 'github-push' ); ?></strong>
-							<ul style="margin-left: 20px; margin-top: 5px;">
-								<li><?php echo esc_html__( '非公開（プライベート）リポジトリにアクセスする場合: 必須', 'github-push' ); ?></li>
-								<li><?php echo esc_html__( '公開リポジトリでも使用可能: レート制限が緩和されます（認証なし: 60リクエスト/時 → 認証あり: 5,000リクエスト/時）', 'github-push' ); ?></li>
-							</ul>
-							<br>
+							<?php echo esc_html__( '非公開リポジトリにアクセスする場合は必須です。公開リポジトリでも使用可能で、APIレート制限が緩和されます（認証なし: 60リクエスト/時 → 認証あり: 5,000リクエスト/時）。', 'github-push' ); ?>
+							<br><br>
 							<strong><?php echo esc_html__( 'トークンの作成方法:', 'github-push' ); ?></strong>
-							<ol style="margin-left: 20px; margin-top: 5px;">
-								<li><?php echo esc_html__( 'GitHubにログインし、', 'github-push' ); ?>
-									<a href="https://github.com/settings/tokens" target="_blank"><?php echo esc_html__( 'Settings > Developer settings > Personal access tokens > Tokens (classic)', 'github-push' ); ?></a>
-									<?php echo esc_html__( 'にアクセス', 'github-push' ); ?></li>
-								<li><?php echo esc_html__( '「Generate new token (classic)」をクリック', 'github-push' ); ?></li>
-								<li><?php echo esc_html__( 'トークンに名前を付ける（例: WordPress Plugin Manager）', 'github-push' ); ?></li>
-								<li><?php echo esc_html__( '有効期限を設定（推奨: 90日または1年）', 'github-push' ); ?></li>
-								<li><?php echo esc_html__( '必要なスコープ（権限）を選択:', 'github-push' ); ?>
-									<ul style="margin-left: 20px; margin-top: 5px;">
-										<li><code>repo</code> - <?php echo esc_html__( '非公開リポジトリにアクセスする場合に必要（すべてのリポジトリへのフルアクセス）', 'github-push' ); ?></li>
-										<li><code>public_repo</code> - <?php echo esc_html__( '公開リポジトリのみにアクセスする場合（より制限的）', 'github-push' ); ?></li>
-									</ul>
-								</li>
-								<li><?php echo esc_html__( '「Generate token」をクリックしてトークンを生成', 'github-push' ); ?></li>
-								<li><?php echo esc_html__( '生成されたトークンをコピーして、このフィールドに貼り付け（表示されるのは一度だけなので注意）', 'github-push' ); ?></li>
-							</ol>
+							<?php echo esc_html__( 'GitHubの', 'github-push' ); ?>
+							<a href="https://github.com/settings/tokens" target="_blank"><?php echo esc_html__( 'Settings > Developer settings > Personal access tokens', 'github-push' ); ?></a>
+							<?php echo esc_html__( 'から「Generate new token (classic)」をクリックし、必要なスコープ（', 'github-push' ); ?><code>repo</code><?php echo esc_html__( ' または ', 'github-push' ); ?><code>public_repo</code><?php echo esc_html__( '）を選択してトークンを生成してください。', 'github-push' ); ?>
+							<br><br>
+							<strong><?php echo esc_html__( '注意:', 'github-push' ); ?></strong>
+							<?php echo esc_html__( 'トークンは機密情報です。他人に共有せず、漏洩した場合はすぐにGitHubで無効化してください。', 'github-push' ); ?>
 							<br>
-							<strong><?php echo esc_html__( 'セキュリティに関する注意:', 'github-push' ); ?></strong>
-							<ul style="margin-left: 20px; margin-top: 5px;">
-								<li><?php echo esc_html__( 'トークンはパスワードと同様に機密情報です。他人に共有しないでください。', 'github-push' ); ?></li>
-								<li><?php echo esc_html__( 'トークンが漏洩した場合は、すぐにGitHubでトークンを無効化してください。', 'github-push' ); ?></li>
-								<li><?php echo esc_html__( '必要最小限の権限（スコープ）のみを付与することを推奨します。', 'github-push' ); ?></li>
-								<li><?php echo esc_html__( '定期的にトークンを更新することを推奨します。', 'github-push' ); ?></li>
-							</ul>
-							<br>
-							<a href="https://github.com/settings/tokens" target="_blank" class="button button-secondary">
+							<a href="https://github.com/settings/tokens" target="_blank" class="button button-secondary" style="margin-top: 5px;">
 								<?php echo esc_html__( 'GitHubでトークンを生成', 'github-push' ); ?>
 							</a>
 						</p>
@@ -190,6 +167,25 @@ $use_tags = isset( $plugin['use_tags'] ) ? $plugin['use_tags'] : false;
 				</tr>
 			</tbody>
 		</table>
+		
+		<div class="notice notice-warning inline" style="margin: 15px 0 10px 0; padding: 10px;">
+			<p style="margin: 0;">
+				<strong><?php echo esc_html__( '重要: バージョン情報の取得について', 'github-push' ); ?></strong>
+				<br>
+				<?php echo esc_html__( 'GitHubリポジトリにアップロードされているプラグインファイルには、WordPressプラグインの標準ヘッダー形式（Plugin Name、Version など）が正しく記載されている必要があります。', 'github-push' ); ?>
+				<br>
+				<?php echo esc_html__( 'ヘッダー形式が正しくない場合、バージョン情報を取得できず、バージョンが上がっても更新情報が表示されません。', 'github-push' ); ?>
+				<br>
+				<?php echo esc_html__( 'プラグインファイルの先頭に以下のような形式でヘッダーが記載されているか確認してください:', 'github-push' ); ?>
+				<br>
+				<code style="display: block; margin-top: 5px; padding: 5px; background: #f0f0f0;">
+					<?php echo esc_html__( '/**', 'github-push' ); ?><br>
+					<?php echo esc_html__( 'Plugin Name: プラグイン名', 'github-push' ); ?><br>
+					<?php echo esc_html__( 'Version: 1.0.0', 'github-push' ); ?><br>
+					<?php echo esc_html__( ' */', 'github-push' ); ?>
+				</code>
+			</p>
+		</div>
 		
 		<p class="submit">
 			<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php echo esc_attr__( '保存', 'github-push' ); ?>">

@@ -425,6 +425,7 @@ msgid "ステータス"
 msgstr "Status"
 
 #: includes/class-logger.php:247
+#: github-push.php:322
 msgid "バージョン"
 msgstr "Version"
 
@@ -756,3 +757,91 @@ msgstr "Plugin header is not correctly written. This repository may not be a Wor
 #: admin/views/edit-plugin-form.php:31
 msgid "無効なGitHub URLです。"
 msgstr "Invalid GitHub URL."
+
+#: github-push.php:318
+msgid "プラグイン情報"
+msgstr "Plugin Information"
+
+#: github-push.php:326
+msgid "開発者"
+msgstr "Developer"
+
+#: github-push.php:328
+msgid "テクノフィア"
+msgstr "Technophere"
+
+#: github-push.php:332
+msgid "公式サイト"
+msgstr "Official Website"
+
+#: github-push.php:338
+msgid "お問い合わせ"
+msgstr "Contact"
+
+#: github-push.php:344
+msgid "ライセンス"
+msgstr "License"
+
+#: github-push.php:370
+msgid "開発者: テクノフィア"
+msgstr "Developer: Technophere"
+
+#: admin/views/edit-plugin-form.php:173
+msgid "重要: バージョン情報の取得について"
+msgstr "Important: About Version Information Retrieval"
+
+#: admin/views/edit-plugin-form.php:175
+msgid "GitHubリポジトリにアップロードされているプラグインファイルには、WordPressプラグインの標準ヘッダー形式（Plugin Name、Version など）が正しく記載されている必要があります。"
+msgstr "The plugin file uploaded to the GitHub repository must have the WordPress plugin standard header format (Plugin Name, Version, etc.) correctly written."
+
+#: admin/views/edit-plugin-form.php:177
+msgid "ヘッダー形式が正しくない場合、バージョン情報を取得できず、バージョンが上がっても更新情報が表示されません。"
+msgstr "If the header format is incorrect, version information cannot be retrieved, and update information will not be displayed even when the version is updated."
+
+#: admin/views/edit-plugin-form.php:179
+msgid "プラグインファイルの先頭に以下のような形式でヘッダーが記載されているか確認してください:"
+msgstr "Please verify that the header is written in the following format at the beginning of the plugin file:"
+
+#: admin/views/edit-plugin-form.php:182
+msgid "/**"
+msgstr "/**"
+
+#: admin/views/edit-plugin-form.php:183
+msgid "Plugin Name: プラグイン名"
+msgstr "Plugin Name: Plugin Name"
+
+#: admin/views/edit-plugin-form.php:184
+msgid "Version: 1.0.0"
+msgstr "Version: 1.0.0"
+
+#: admin/views/edit-plugin-form.php:185
+msgid " */"
+msgstr " */"
+
+#: admin/views/edit-plugin-form.php:152
+msgid "非公開リポジトリにアクセスする場合は必須です。公開リポジトリでも使用可能で、APIレート制限が緩和されます（認証なし: 60リクエスト/時 → 認証あり: 5,000リクエスト/時）。"
+msgstr "Required for accessing private repositories. Also available for public repositories, which relaxes API rate limits (without authentication: 60 requests/hour → with authentication: 5,000 requests/hour)."
+
+#: admin/views/edit-plugin-form.php:155
+msgid "GitHubの"
+msgstr "Go to GitHub's"
+
+#: admin/views/edit-plugin-form.php:156
+msgid "Settings > Developer settings > Personal access tokens"
+msgstr "Settings > Developer settings > Personal access tokens"
+
+#: admin/views/edit-plugin-form.php:157
+msgid "から「Generate new token (classic)」をクリックし、必要なスコープ（"
+msgstr ", click \"Generate new token (classic)\", and select the required scope ("
+
+#: admin/views/edit-plugin-form.php:157
+msgid " または "
+msgstr " or "
+
+#: admin/views/edit-plugin-form.php:157
+msgid "）を選択してトークンを生成してください。"
+msgstr ") to generate the token."
+
+#: admin/views/edit-plugin-form.php:160
+msgid "トークンは機密情報です。他人に共有せず、漏洩した場合はすぐにGitHubで無効化してください。"
+msgstr "Tokens are confidential information. Do not share them with others, and if leaked, immediately revoke them on GitHub."
