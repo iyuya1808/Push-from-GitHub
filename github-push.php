@@ -4,7 +4,7 @@
  * Plugin Name: WP Push from GitHub
  * Plugin URI: https://github.com/your-username/github-push
  * Description: 非公開GitHubリポジトリで管理されているWordPressプラグインを自動的に導入・更新するプラグイン
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: Technophere
  * Author URI: https://technophere.codm
  * License: GPL v2 or later
@@ -66,7 +66,7 @@ class GitHub_Push
 		$this->register_hooks();
 
 		// 多言語対応
-		load_plugin_textdomain('github-push', false, dirname(GITHUB_PUSH_PLUGIN_BASENAME) . '/languages');
+		$this->load_textdomain();
 	}
 
 	/**
@@ -179,6 +179,15 @@ class GitHub_Push
 			'github-push-logs',
 			array($this, 'render_logs_page')
 		);
+
+		add_submenu_page(
+			'github-push',
+			__('一般設定', 'github-push'),
+			__('一般設定', 'github-push'),
+			'manage_options',
+			'github-push-settings',
+			array($this, 'render_general_settings_page')
+		);
 	}
 
 	/**
@@ -241,6 +250,70 @@ class GitHub_Push
 			$logger = GitHub_Push_Logger::get_instance();
 			$logger->render_logs_page();
 		}
+	}
+
+	/**
+	 * 一般設定画面の表示
+	 */
+	public function render_general_settings_page()
+	{
+		// 設定保存処理
+		if (isset($_POST['github_push_save_general_settings']) && check_admin_referer('github_push_general_settings')) {
+			$options = get_option('github_push_options', array());
+			$options['language'] = isset($_POST['language']) ? sanitize_text_field($_POST['language']) : '';
+			update_option('github_push_options', $options);
+
+			// テキストドメインを再読み込み
+			$this->load_textdomain();
+
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('設定を保存しました', 'github-push') . '</p></div>';
+		}
+
+		$options = get_option('github_push_options', array());
+		$current_language = isset($options['language']) ? $options['language'] : '';
+
+		// 利用可能な言語リスト
+		$available_languages = array(
+			'' => __('WordPressのデフォルト言語を使用', 'github-push'),
+			'ja' => __('日本語', 'github-push'),
+			'en_US' => __('English (US)', 'github-push'),
+		);
+?>
+		<div class="wrap">
+			<h1><?php echo esc_html__('一般設定', 'github-push'); ?></h1>
+
+			<form method="post" action="">
+				<?php wp_nonce_field('github_push_general_settings'); ?>
+				<input type="hidden" name="github_push_save_general_settings" value="1">
+
+				<table class="form-table">
+					<tbody>
+						<tr>
+							<th scope="row">
+								<label for="language"><?php echo esc_html__('言語', 'github-push'); ?></label>
+							</th>
+							<td>
+								<select name="language" id="language">
+									<?php foreach ($available_languages as $code => $name) : ?>
+										<option value="<?php echo esc_attr($code); ?>" <?php selected($current_language, $code); ?>>
+											<?php echo esc_html($name); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<p class="description">
+									<?php echo esc_html__('プラグインの表示言語を選択します。空の場合は、WordPressの設定に従います。', 'github-push'); ?>
+								</p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<p class="submit">
+					<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php echo esc_attr__('変更を保存', 'github-push'); ?>">
+				</p>
+			</form>
+		</div>
+<?php
 	}
 
 	/**
@@ -409,9 +482,32 @@ class GitHub_Push
 			'check_interval' => 24, // 時間
 			'email_notifications' => false,
 			'auto_update' => false,
+			'language' => '', // 空の場合はWordPressのデフォルト言語を使用
 		);
 
 		add_option('github_push_options', $default_options);
+	}
+
+	/**
+	 * テキストドメインを読み込み
+	 */
+	private function load_textdomain()
+	{
+		$options = get_option('github_push_options', array());
+		$language = isset($options['language']) ? $options['language'] : '';
+
+		// テキストドメインを読み込み
+		$domain = 'github-push';
+		$locale = !empty($language) ? $language : determine_locale();
+		$mofile = GITHUB_PUSH_PLUGIN_DIR . 'languages/' . $domain . '-' . $locale . '.mo';
+
+		// ファイルが存在する場合のみ読み込み
+		if (file_exists($mofile)) {
+			load_textdomain($domain, $mofile);
+		} else {
+			// ファイルが存在しない場合は、標準のload_plugin_textdomainを使用
+			load_plugin_textdomain($domain, false, dirname(GITHUB_PUSH_PLUGIN_BASENAME) . '/languages');
+		}
 	}
 }
 

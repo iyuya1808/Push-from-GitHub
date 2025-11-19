@@ -210,11 +210,16 @@ class GitHub_Push_Logger {
 		$debug_info = '';
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			$debug_info = sprintf(
-				'<div class="notice notice-info"><p>デバッグ情報: テーブル存在=%s, ログ件数=%d, 取得件数=%d, エラー=%s</p></div>',
+				'<div class="notice notice-info"><p>%s: %s=%s, %s=%d, %s=%d, %s=%s</p></div>',
+				__( 'デバッグ情報', 'github-push' ),
+				__( 'テーブル存在', 'github-push' ),
 				$table_exists ? 'true' : 'false',
+				__( 'ログ件数', 'github-push' ),
 				$total_logs,
+				__( '取得件数', 'github-push' ),
 				count( $logs ),
-				$wpdb->last_error ? esc_html( $wpdb->last_error ) : 'なし'
+				__( 'エラー', 'github-push' ),
+				$wpdb->last_error ? esc_html( $wpdb->last_error ) : __( 'なし', 'github-push' )
 			);
 		}
 		?>
@@ -292,14 +297,14 @@ class GitHub_Push_Logger {
 									}
 									?>
 								</td>
-								<td><?php echo esc_html( $log['action'] ); ?></td>
+								<td><?php echo esc_html( $this->translate_action( $log['action'] ) ); ?></td>
 								<td>
 									<span class="status status-<?php echo esc_attr( $log['status'] ); ?>">
-										<?php echo esc_html( $log['status'] ); ?>
+										<?php echo esc_html( $this->translate_status( $log['status'] ) ); ?>
 									</span>
 								</td>
 								<td><?php echo esc_html( $log['version'] ); ?></td>
-								<td><?php echo esc_html( $log['message'] ); ?></td>
+								<td><?php echo esc_html( $this->translate_log_message( $log['message'] ) ); ?></td>
 								<td>
 									<?php if ( $can_rollback ) : ?>
 										<button class="button button-small rollback-from-log" 
@@ -336,6 +341,87 @@ class GitHub_Push_Logger {
 			<?php endif; ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * アクション名を翻訳
+	 *
+	 * @param string $action アクション名
+	 * @return string 翻訳されたアクション名
+	 */
+	private function translate_action( $action ) {
+		$actions = array(
+			'version_check' => __( 'バージョンチェック', 'github-push' ),
+			'update' => __( '更新', 'github-push' ),
+			'rollback' => __( 'ロールバック', 'github-push' ),
+			'backup' => __( 'バックアップ', 'github-push' ),
+		);
+
+		return isset( $actions[ $action ] ) ? $actions[ $action ] : $action;
+	}
+
+	/**
+	 * ステータス名を翻訳
+	 *
+	 * @param string $status ステータス名
+	 * @return string 翻訳されたステータス名
+	 */
+	private function translate_status( $status ) {
+		$statuses = array(
+			'success' => __( '成功', 'github-push' ),
+			'error' => __( 'エラー', 'github-push' ),
+			'info' => __( '情報', 'github-push' ),
+			'warning' => __( '警告', 'github-push' ),
+		);
+
+		return isset( $statuses[ $status ] ) ? $statuses[ $status ] : $status;
+	}
+
+	/**
+	 * ログメッセージを翻訳
+	 * データベースに保存されているメッセージが日本語の場合、現在の言語設定に応じて翻訳
+	 *
+	 * @param string $message ログメッセージ
+	 * @return string 翻訳されたメッセージ
+	 */
+	private function translate_log_message( $message ) {
+		// 自動更新チェックのプレフィックスを翻訳
+		if ( strpos( $message, '自動更新チェック:' ) === 0 ) {
+			$translated_prefix = __( '自動更新チェック:', 'github-push' );
+			$rest = trim( substr( $message, strlen( '自動更新チェック:' ) ) );
+			// 残りの部分も翻訳を試みる
+			$rest_translated = $this->translate_message_content( $rest );
+			return $translated_prefix . ' ' . $rest_translated;
+		}
+		
+		// 一般的なメッセージパターンを翻訳
+		return $this->translate_message_content( $message );
+	}
+
+	/**
+	 * メッセージ内容を翻訳
+	 *
+	 * @param string $message メッセージ
+	 * @return string 翻訳されたメッセージ
+	 */
+	private function translate_message_content( $message ) {
+		// 一般的なメッセージパターンを翻訳
+		$patterns = array(
+			'/^更新が利用可能です。現在: (.+) → 最新: (.+)$/u' => __( '更新が利用可能です。現在: %s → 最新: %s', 'github-push' ),
+			'/^更新はありません。現在のバージョン: (.+)$/u' => __( '更新はありません。現在のバージョン: %s', 'github-push' ),
+			'/^プラグインを (.+) に更新しました$/u' => __( 'プラグインを %s に更新しました', 'github-push' ),
+		);
+		
+		foreach ( $patterns as $pattern => $translation_template ) {
+			if ( preg_match( $pattern, $message, $matches ) ) {
+				array_shift( $matches ); // 最初の要素（全体一致）を削除
+				return vsprintf( $translation_template, $matches );
+			}
+		}
+		
+		// パターンに一致しない場合は、そのまま返す
+		// エラーメッセージなどは既に翻訳されている可能性があるため
+		return $message;
 	}
 }
 
