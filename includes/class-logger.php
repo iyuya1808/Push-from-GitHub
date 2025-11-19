@@ -266,6 +266,7 @@ class GitHub_Push_Logger {
 							// 更新成功のログで、バージョンがあり、バックアップが存在する場合のみロールバックボタンを表示
 							$can_rollback = false;
 							$backup_path = '';
+							$backup_version = '';
 							
 							if ( $log['action'] === 'update' && $log['status'] === 'success' && ! empty( $log['version'] ) ) {
 								// このログのバージョンに対応するバックアップを探す
@@ -297,6 +298,8 @@ class GitHub_Push_Logger {
 										
 										$can_rollback = true;
 										$backup_path = $candidate_backups[0]['path'];
+										// バックアップのバージョン（更新前のバージョン）を取得
+										$backup_version = isset( $candidate_backups[0]['version'] ) ? $candidate_backups[0]['version'] : '';
 									}
 								}
 							}
@@ -324,7 +327,7 @@ class GitHub_Push_Logger {
 									<?php if ( $can_rollback ) : ?>
 										<button class="button button-small rollback-from-log" 
 												data-plugin-id="<?php echo esc_attr( $log['plugin_id'] ); ?>"
-												data-version="<?php echo esc_attr( $log['version'] ); ?>"
+												data-version="<?php echo esc_attr( $backup_version ); ?>"
 												data-backup-path="<?php echo esc_attr( $backup_path ); ?>">
 											<?php echo esc_html__( 'このバージョンに戻す', 'github-push' ); ?>
 										</button>
