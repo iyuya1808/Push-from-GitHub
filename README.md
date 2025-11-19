@@ -1,10 +1,10 @@
-# GitHub Push
+# WP Push from GitHub (WPGP)
 
 非公開GitHubリポジトリで管理されているWordPressプラグインを、WordPressサイトに自動的に導入・更新するプラグインです。
 
 ## 概要
 
-GitHub Pushは、GitHubで管理されているWordPressプラグインを、WordPress管理画面から簡単に導入・更新できるプラグインです。非公開リポジトリにも対応しており、Personal Access Tokenを使用して安全にアクセスできます。
+WP Push from GitHub（省略名：WPGP）は、GitHubで管理されているWordPressプラグインを、WordPress管理画面から簡単に導入・更新できるプラグインです。非公開リポジトリにも対応しており、Personal Access Tokenを使用して安全にアクセスできます。
 
 ## 主な機能
 
@@ -29,7 +29,7 @@ GitHub Pushは、GitHubで管理されているWordPressプラグインを、Wor
 
 ### 2. プラグインの有効化
 
-「プラグイン」メニューから「GitHub Push」を有効化してください。
+「プラグイン」メニューから「WP Push from GitHub」を有効化してください。
 
 ## 使い方
 
@@ -40,7 +40,7 @@ GitHub Pushは、GitHubで管理されているWordPressプラグインを、Wor
    - 非公開リポジトリの場合は、Personal Access Tokenを準備
 
 2. **プラグインの登録**
-   - WordPress管理画面の「GitHub Push」メニューを開く
+   - WordPress管理画面の「WPGP」メニューを開く
    - 「新しいプラグインを追加」ボタンをクリック
    - 必要な情報を入力して保存
 
