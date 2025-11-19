@@ -3,7 +3,7 @@
 /**
  * Plugin Name: WP Push from GitHub
  * Description: 非公開GitHubリポジトリで管理されているWordPressプラグインを自動的に導入・更新するプラグイン
- * Version: 1.1.5
+ * Version: 1.1.6
  * Author: Technophere
  * Author URI: https://technophere.codm
  * License: GPL v2 or later
