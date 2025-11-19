@@ -273,15 +273,30 @@ class GitHub_Push_Logger {
 								if ( isset( $backups[ $log['plugin_id'] ] ) && is_array( $backups[ $log['plugin_id'] ] ) ) {
 									// ログの日時より前のバックアップを探す（更新前に作成されたバックアップ）
 									$log_time = strtotime( $log['created_at'] );
+									$candidate_backups = array();
+									
 									foreach ( $backups[ $log['plugin_id'] ] as $backup ) {
+										if ( ! isset( $backup['created_at'] ) || ! isset( $backup['path'] ) ) {
+											continue;
+										}
+										
 										$backup_time = strtotime( $backup['created_at'] );
 										// ログの日時より前のバックアップで、ファイルが存在する場合
 										if ( $backup_time <= $log_time && file_exists( $backup['path'] ) ) {
-											$can_rollback = true;
-											$backup_path = $backup['path'];
-											// 最新のバックアップを使用（複数ある場合）
-											break;
+											$candidate_backups[] = $backup;
 										}
+									}
+									
+									// created_at でソート（新しい順）して最新のものを選択
+									if ( ! empty( $candidate_backups ) ) {
+										usort( $candidate_backups, function( $a, $b ) {
+											$time_a = isset( $a['created_at'] ) ? strtotime( $a['created_at'] ) : 0;
+											$time_b = isset( $b['created_at'] ) ? strtotime( $b['created_at'] ) : 0;
+											return $time_b - $time_a;
+										} );
+										
+										$can_rollback = true;
+										$backup_path = $candidate_backups[0]['path'];
 									}
 								}
 							}

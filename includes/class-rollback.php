@@ -146,9 +146,22 @@ class GitHub_Push_Rollback {
 		}
 		
 		$plugin_backups = $backups[ $plugin_id ];
-		$latest_backup = end( $plugin_backups );
 		
-		return isset( $latest_backup['path'] ) ? $latest_backup['path'] : new WP_Error( 'backup_path_missing', __( 'バックアップパスが設定されていません', 'github-push' ) );
+		// created_at でソート（新しい順）
+		usort( $plugin_backups, function( $a, $b ) {
+			$time_a = isset( $a['created_at'] ) ? strtotime( $a['created_at'] ) : 0;
+			$time_b = isset( $b['created_at'] ) ? strtotime( $b['created_at'] ) : 0;
+			return $time_b - $time_a;
+		} );
+		
+		// ファイルが存在する最新のバックアップを探す
+		foreach ( $plugin_backups as $backup ) {
+			if ( isset( $backup['path'] ) && file_exists( $backup['path'] ) ) {
+				return $backup['path'];
+			}
+		}
+		
+		return new WP_Error( 'backup_not_found', __( '有効なバックアップファイルが見つかりません', 'github-push' ) );
 	}
 	
 	/**
@@ -200,8 +213,9 @@ class GitHub_Push_Rollback {
 			return new WP_Error( 'scan_failed', __( '展開ディレクトリを読み取れませんでした', 'github-push' ) );
 		}
 		
-		// 最初のディレクトリを探す
-		$source_dir = null;
+		// ディレクトリとファイルを分けて探す
+		$directories = array();
+		$has_files = false;
 		
 		foreach ( $files as $file ) {
 			if ( $file === '.' || $file === '..' ) {
@@ -211,14 +225,27 @@ class GitHub_Push_Rollback {
 			$file_path = $extracted_path . '/' . $file;
 			
 			if ( is_dir( $file_path ) ) {
-				$source_dir = $file_path;
-				break;
+				$directories[] = $file_path;
+			} else {
+				$has_files = true;
 			}
 		}
 		
-		if ( ! $source_dir ) {
-			// ディレクトリが見つからない場合は、展開先自体がプラグインディレクトリ
+		// ソースディレクトリを決定
+		$source_dir = null;
+		
+		if ( $has_files ) {
+			// ファイルが直接ある場合は、展開先自体がプラグインディレクトリ
 			$source_dir = $extracted_path;
+		} elseif ( count( $directories ) === 1 ) {
+			// ディレクトリが1つだけの場合は、そのディレクトリを使用
+			$source_dir = $directories[0];
+		} elseif ( count( $directories ) > 1 ) {
+			// 複数のディレクトリがある場合は、最初のディレクトリを使用
+			$source_dir = $directories[0];
+		} else {
+			// ディレクトリもファイルもない場合はエラー
+			return new WP_Error( 'no_files_found', __( '展開されたファイルが見つかりませんでした', 'github-push' ) );
 		}
 		
 		// プラグインディレクトリを作成

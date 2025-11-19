@@ -357,10 +357,15 @@ class GitHub_Push_Updater {
 			RecursiveIteratorIterator::LEAVES_ONLY
 		);
 		
+		// プラグインディレクトリの正規化されたパスを取得（末尾のスラッシュを統一）
+		$plugin_dir_normalized = rtrim( str_replace( '\\', '/', $plugin_dir ), '/' ) . '/';
+		
 		foreach ( $files as $file ) {
 			if ( ! $file->isDir() ) {
 				$file_path = $file->getRealPath();
-				$relative_path = substr( $file_path, strlen( $plugin_dir ) + 1 );
+				// 正規化されたパスを使用して相対パスを取得
+				$file_path_normalized = str_replace( '\\', '/', $file_path );
+				$relative_path = str_replace( $plugin_dir_normalized, '', $file_path_normalized );
 				$zip->addFile( $file_path, $relative_path );
 			}
 		}
@@ -370,6 +375,17 @@ class GitHub_Push_Updater {
 		// 現在のバージョンを取得
 		$github_api = GitHub_Push_Github_API::get_instance();
 		$current_version = $github_api->get_current_version( $plugin_id );
+		
+		// バージョンが '0.0.0' の場合は、プラグインファイルから直接取得を試みる
+		if ( $current_version === '0.0.0' && ! empty( $plugin_slug ) ) {
+			$plugin_file = WP_PLUGIN_DIR . '/' . $plugin_slug;
+			if ( file_exists( $plugin_file ) ) {
+				$plugin_data = get_plugin_data( $plugin_file );
+				if ( isset( $plugin_data['Version'] ) && ! empty( $plugin_data['Version'] ) ) {
+					$current_version = $plugin_data['Version'];
+				}
+			}
+		}
 		
 		// バックアップ情報を保存
 		$backups = get_option( 'github_push_backups', array() );
@@ -384,13 +400,18 @@ class GitHub_Push_Updater {
 			'created_at' => current_time( 'mysql' ),
 		);
 		
+		// バックアップ配列を created_at でソート（古い順）
+		usort( $backups[ $plugin_id ], function( $a, $b ) {
+			return strtotime( $a['created_at'] ) - strtotime( $b['created_at'] );
+		} );
+		
 		// 古いバックアップを削除（最大5つまで保持）
 		if ( count( $backups[ $plugin_id ] ) > 5 ) {
 			$old_backups = array_slice( $backups[ $plugin_id ], 0, -5 );
 			
 			foreach ( $old_backups as $old_backup ) {
-				if ( file_exists( $old_backup['path'] ) ) {
-					unlink( $old_backup['path'] );
+				if ( isset( $old_backup['path'] ) && file_exists( $old_backup['path'] ) ) {
+					@unlink( $old_backup['path'] );
 				}
 			}
 			
