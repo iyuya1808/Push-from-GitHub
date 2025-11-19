@@ -1,0 +1,130 @@
+/**
+ * GitHub Push 管理画面用CSS
+ */
+
+.github-push-header {
+	margin: 20px 0;
+}
+
+.github-push-empty {
+	padding: 40px;
+	text-align: center;
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+}
+
+.update-available {
+	display: inline-block;
+	margin-left: 10px;
+	padding: 2px 8px;
+	background: #f0b849;
+	color: #fff;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.github-push-modal {
+	position: fixed;
+	z-index: 100000;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgba(0, 0, 0, 0.4);
+}
+
+.github-push-modal-content {
+	background-color: #fefefe;
+	margin: 15% auto;
+	padding: 20px;
+	border: 1px solid #888;
+	width: 80%;
+	max-width: 500px;
+	border-radius: 4px;
+	position: relative;
+}
+
+.github-push-modal-close {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+	position: absolute;
+	right: 15px;
+	top: 10px;
+	cursor: pointer;
+}
+
+.github-push-modal-close:hover,
+.github-push-modal-close:focus {
+	color: #000;
+	text-decoration: none;
+}
+
+.github-push-modal-body {
+	padding: 20px 0;
+}
+
+.github-push-modal-message {
+	margin: 0;
+}
+
+.github-push-logs-filter {
+	margin: 20px 0;
+	padding: 15px;
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+}
+
+.github-push-logs-filter select {
+	margin-right: 10px;
+}
+
+.status {
+	display: inline-block;
+	padding: 3px 8px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.status-success {
+	background: #46b450;
+	color: #fff;
+}
+
+.status-error {
+	background: #dc3232;
+	color: #fff;
+}
+
+.status-info {
+	background: #00a0d2;
+	color: #fff;
+}
+
+.status-warning {
+	background: #f0b849;
+	color: #fff;
+}
+
+.required {
+	color: #dc3232;
+}
+
+.button.check-update,
+.button.update-plugin {
+	margin-right: 5px;
+}
+
+.spinner {
+	float: none;
+	margin: 0 5px;
+}
+
