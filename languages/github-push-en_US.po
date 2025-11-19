@@ -441,6 +441,10 @@ msgstr "No logs"
 msgid "このバージョンに戻す"
 msgstr "Rollback to this version"
 
+#: includes/class-logger.php:334
+msgid "バージョン %s に戻す"
+msgstr "Rollback to version %s"
+
 #: includes/class-notifications.php:56
 msgid "プラグイン \"%s\" が %s に更新されました。"
 msgstr "Plugin \"%s\" has been updated to %s."

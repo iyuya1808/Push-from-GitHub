@@ -446,6 +446,10 @@ msgstr ""
 msgid "このバージョンに戻す"
 msgstr ""
 
+#: includes/class-logger.php:334
+msgid "バージョン %s に戻す"
+msgstr ""
+
 #: includes/class-notifications.php:56
 msgid "プラグイン \"%s\" が %s に更新されました。"
 msgstr ""
