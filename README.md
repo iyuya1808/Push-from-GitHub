@@ -9,15 +9,15 @@ Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-GitHubで管理されているWordPressプラグインを自動的に導入・更新するプラグイン。非公開リポジトリにも対応。  
+GitHubで管理されているWordPressプラグイン / テーマを自動的に導入・更新するプラグイン。非公開リポジトリにも対応。  
 
 ## 概要
 
-Push from GitHubは、GitHubで管理されているWordPressプラグインをWordPress管理画面から直接管理できるプラグインです。公開リポジトリだけでなく、非公開リポジトリにも対応しており、Personal Access Tokenを使用してアクセスできます。
+Push from GitHubは、GitHubで管理されているWordPressプラグインやテーマをWordPress管理画面から直接管理できるプラグインです。公開リポジトリだけでなく、非公開リポジトリにも対応しており、Personal Access Tokenを使用してアクセスできます。
 
 ## 主な機能
 
-- **GitHubリポジトリ連携**: GitHubリポジトリからプラグインを自動的に取得・更新
+- **GitHubリポジトリ連携**: GitHubリポジトリからプラグイン / テーマを自動的に取得・更新
 - **非公開リポジトリ対応**: Personal Access Tokenを使用して非公開リポジトリにアクセス
 - **更新方法の選択**: タグ（リリース）またはブランチから更新を取得
 - **自動バックアップ**: 更新前に自動的にバックアップを作成（最大5つまで保持）
@@ -42,15 +42,16 @@ Push from GitHubは、GitHubで管理されているWordPressプラグインをW
 
 ## 使用方法
 
-### 1. プラグインの登録
+### 1. プラグイン / テーマの登録
 
 1. 管理画面の「PFG」→「GitHub設定」にアクセス
 2. 「追加」ボタンをクリック
 3. 以下の情報を入力:
    - **GitHubリポジトリURL**: 管理したいGitHubリポジトリのURL
+   - **対象**: プラグインかテーマかを選択
    - **更新方法**: タグを使用するか、ブランチを使用するか
    - **ブランチ名**: ブランチを使用する場合のブランチ名（デフォルト: main）
-   - **プラグインスラッグ**: WordPressにインストールされているプラグインのスラッグ（例: `my-plugin/my-plugin.php`）
+   - **プラグインスラッグ / テーマスラッグ**: WordPressにインストールされている対象のスラッグ（例: `my-plugin/my-plugin.php` または `my-theme`）
    - **Personal Access Token**: 非公開リポジトリを使用する場合に必要
 
 ### 2. 更新のチェックと適用

@@ -179,8 +179,14 @@ class GitHub_Push_Github_API
 		$branch = isset($plugin['branch']) ? $plugin['branch'] : 'main';
 		$token = isset($plugin['token']) ? $plugin['token'] : '';
 		$plugin_slug = isset($plugin['plugin_slug']) ? $plugin['plugin_slug'] : '';
+		$is_theme = $this->is_theme_component($plugin);
+		$theme_slug = $is_theme ? (isset($plugin['theme_slug']) ? $plugin['theme_slug'] : '') : '';
 
-		if (empty($plugin_slug)) {
+		if ($is_theme && empty($theme_slug)) {
+			return new WP_Error('theme_slug_missing', __('テーマスラッグが指定されていません', 'push-from-github'));
+		}
+
+		if (! $is_theme && empty($plugin_slug)) {
 			return new WP_Error('plugin_slug_missing', __('プラグインスラッグが指定されていません', 'push-from-github'));
 		}
 
@@ -199,7 +205,6 @@ class GitHub_Push_Github_API
 
 		$commit_sha = $commit['sha'];
 
-		// プラグインファイルのパスを取得（プラグインスラッグをそのまま使用）
 		$plugin_file_path = $plugin_slug;
 		$plugin_filename = basename($plugin_file_path);
 
@@ -218,41 +223,58 @@ class GitHub_Push_Github_API
 				}
 			}
 
-			// まず、プラグインスラッグから推測したファイル名で検索
-			$found_path = $this->find_plugin_file_in_contents($root_contents, $plugin_filename, $repo_info, $branch, $token);
-			if ($found_path) {
-				$possible_paths[] = $found_path;
+			if ($is_theme) {
+				$found_theme_path = $this->find_theme_main_file($root_contents, $repo_info, $branch, $token, $theme_slug);
+				if ($found_theme_path) {
+					$possible_paths[] = $found_theme_path;
+				}
 			} else {
-				// 見つからない場合、リポジトリ内のプラグインファイルを自動検索（Version: ヘッダーがあるPHPファイルを探す）
-				$found_path = $this->find_plugin_main_file($root_contents, $repo_info, $branch, $token);
+				// まず、プラグインスラッグから推測したファイル名で検索
+				$found_path = $this->find_plugin_file_in_contents($root_contents, $plugin_filename, $repo_info, $branch, $token);
 				if ($found_path) {
 					$possible_paths[] = $found_path;
+				} else {
+					// 見つからない場合、リポジトリ内のプラグインファイルを自動検索（Version: ヘッダーがあるPHPファイルを探す）
+					$found_path = $this->find_plugin_main_file($root_contents, $repo_info, $branch, $token);
+					if ($found_path) {
+						$possible_paths[] = $found_path;
+					}
 				}
 			}
 		}
 
 		// 見つからなかった場合、従来のパターンも試す
 		if (empty($possible_paths)) {
-			$possible_paths = array(
-				$plugin_file_path, // プラグインスラッグをそのまま使用
-				basename($plugin_file_path), // ファイル名のみ
-			);
+			if ($is_theme) {
+				$possible_paths = array();
+				if (!empty($theme_slug)) {
+					$possible_paths[] = trim($theme_slug, '/') . '/style.css';
+					$possible_paths[] = 'themes/' . trim($theme_slug, '/') . '/style.css';
+					$possible_paths[] = 'wp-content/themes/' . trim($theme_slug, '/') . '/style.css';
+				}
+				$possible_paths[] = 'style.css';
+			} else {
+				$possible_paths = array(
+					$plugin_file_path, // プラグインスラッグをそのまま使用
+					basename($plugin_file_path), // ファイル名のみ
+				);
 
-			// ディレクトリ名とファイル名を分離
-			$plugin_dir = dirname($plugin_file_path);
+				// ディレクトリ名とファイル名を分離
+				$plugin_dir = dirname($plugin_file_path);
 
-			// ディレクトリが '.' でない場合（サブディレクトリがある場合）
-			if ($plugin_dir !== '.' && $plugin_dir !== $plugin_file_path) {
-				// ディレクトリ名/ファイル名のパターンを追加
-				$possible_paths[] = $plugin_dir . '/' . $plugin_filename;
-			}
-
-			// 一般的なディレクトリ構造を試す
-			$common_dirs = array('src', 'includes', 'lib', 'app');
-			foreach ($common_dirs as $dir) {
-				$possible_paths[] = $dir . '/' . $plugin_filename;
+				// ディレクトリが '.' でない場合（サブディレクトリがある場合）
 				if ($plugin_dir !== '.' && $plugin_dir !== $plugin_file_path) {
-					$possible_paths[] = $dir . '/' . $plugin_dir . '/' . $plugin_filename;
+					// ディレクトリ名/ファイル名のパターンを追加
+					$possible_paths[] = $plugin_dir . '/' . $plugin_filename;
+				}
+
+				// 一般的なディレクトリ構造を試す
+				$common_dirs = array('src', 'includes', 'lib', 'app');
+				foreach ($common_dirs as $dir) {
+					$possible_paths[] = $dir . '/' . $plugin_filename;
+					if ($plugin_dir !== '.' && $plugin_dir !== $plugin_file_path) {
+						$possible_paths[] = $dir . '/' . $plugin_dir . '/' . $plugin_filename;
+					}
 				}
 			}
 		}
@@ -283,13 +305,18 @@ class GitHub_Push_Github_API
 			$error_message = $file_response->get_error_message();
 			if ($error_message === 'Not Found') {
 				$paths_list = implode(', ', $tried_paths);
-				$error_msg = sprintf(
-					__('プラグインファイルが見つかりませんでした。', 'push-from-github')
-				);
-				// translators: %s: Plugin filename
-				$error_msg .= "\n" . sprintf(__('検索したファイル名: %s', 'push-from-github'), $plugin_filename);
-				// translators: %s: Tried paths
-				$error_msg .= "\n" . sprintf(__('試したパス: %s', 'push-from-github'), $paths_list);
+				if ($is_theme) {
+					$error_msg = __('テーマファイルが見つかりませんでした。style.css が正しい場所にあるか確認してください。', 'push-from-github');
+					$error_msg .= "\n" . sprintf(__('試したパス: %s', 'push-from-github'), $paths_list);
+				} else {
+					$error_msg = sprintf(
+						__('プラグインファイルが見つかりませんでした。', 'push-from-github')
+					);
+					// translators: %s: Plugin filename
+					$error_msg .= "\n" . sprintf(__('検索したファイル名: %s', 'push-from-github'), $plugin_filename);
+					// translators: %s: Tried paths
+					$error_msg .= "\n" . sprintf(__('試したパス: %s', 'push-from-github'), $paths_list);
+				}
 
 				// ルートディレクトリの内容を表示（デバッグ用）
 				if (!empty($root_files)) {
@@ -332,11 +359,15 @@ class GitHub_Push_Github_API
 			return new WP_Error('file_content_error', __('ファイル内容を取得できませんでした', 'push-from-github'));
 		}
 
-		// プラグインファイルからバージョンを抽出
+		// プラグイン/テーマファイルからバージョンを抽出
 		$version = $this->extract_version_from_plugin_file($file_content);
 
 		if (empty($version)) {
 			// バージョンが見つからない場合はエラーを返す（コミットSHAは使用しない）
+			if ($is_theme) {
+				return new WP_Error('version_not_found', __('テーマの style.css からバージョン情報を取得できませんでした。Version: ヘッダーが正しく記載されているか確認してください。', 'push-from-github'));
+			}
+
 			return new WP_Error('version_not_found', __('プラグインファイルからバージョン情報を取得できませんでした。Version: ヘッダーが正しく記載されているか確認してください。', 'push-from-github'));
 		}
 
@@ -494,6 +525,77 @@ class GitHub_Push_Github_API
 				if (preg_match('/\.php$/', $item['name'])) {
 					// ルートディレクトリのPHPファイルを返す（最初に見つかったもの）
 					return isset($item['path']) ? $item['path'] : $item['name'];
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * テーマのstyle.cssを検索
+	 *
+	 * @param array $contents ディレクトリの内容
+	 * @param array $repo_info リポジトリ情報
+	 * @param string $branch ブランチ名
+	 * @param string $token アクセストークン
+	 * @param string $theme_slug テーマスラッグ
+	 * @return string|false 見つかったパスまたはfalse
+	 */
+	private function find_theme_main_file($contents, $repo_info, $branch, $token, $theme_slug)
+	{
+		$theme_slug = trim($theme_slug);
+		$candidate_dirs = array();
+
+		if (!empty($theme_slug)) {
+			$candidate_dirs[] = $theme_slug;
+			$candidate_dirs[] = trim($theme_slug, '/');
+			$candidate_dirs[] = 'wp-content/themes/' . trim($theme_slug, '/');
+			$candidate_dirs[] = 'themes/' . trim($theme_slug, '/');
+		}
+
+		foreach ($candidate_dirs as $dir) {
+			$dir = trim($dir, '/');
+			if (empty($dir)) {
+				continue;
+			}
+
+			$dir_url = $this->api_base . '/repos/' . $repo_info['owner'] . '/' . $repo_info['repo'] . '/contents/' . $dir . '?ref=' . $branch;
+			$dir_contents = $this->make_request($dir_url, $token);
+
+			if (is_wp_error($dir_contents) || !is_array($dir_contents)) {
+				continue;
+			}
+
+			foreach ($dir_contents as $item) {
+				if (isset($item['type']) && $item['type'] === 'file' && isset($item['name']) && strtolower($item['name']) === 'style.css') {
+					return isset($item['path']) ? $item['path'] : $dir . '/style.css';
+				}
+			}
+		}
+
+		// ルートおよび1階層目を走査
+		foreach ($contents as $item) {
+			if (isset($item['type']) && $item['type'] === 'file' && isset($item['name']) && strtolower($item['name']) === 'style.css') {
+				return isset($item['path']) ? $item['path'] : $item['name'];
+			}
+
+			if (isset($item['type']) && $item['type'] === 'dir' && isset($item['path'])) {
+				$subdir_url = $this->api_base . '/repos/' . $repo_info['owner'] . '/' . $repo_info['repo'] . '/contents/' . $item['path'] . '?ref=' . $branch;
+				$subdir_contents = $this->make_request($subdir_url, $token);
+
+				if (is_wp_error($subdir_contents) || !is_array($subdir_contents)) {
+					continue;
+				}
+
+				foreach ($subdir_contents as $subitem) {
+					if (isset($subitem['type']) && $subitem['type'] === 'file' && isset($subitem['name']) && strtolower($subitem['name']) === 'style.css') {
+						// テーマスラッグが指定されている場合は、パス内に含まれているものを優先
+						if (!empty($theme_slug) && strpos($subitem['path'], $theme_slug) === false) {
+							continue;
+						}
+						return isset($subitem['path']) ? $subitem['path'] : $item['path'] . '/style.css';
+					}
 				}
 			}
 		}
@@ -753,6 +855,17 @@ class GitHub_Push_Github_API
 	}
 
 	/**
+	 * テーマかどうかを判定
+	 *
+	 * @param array $plugin プラグイン情報
+	 * @return bool true ならテーマ
+	 */
+	private function is_theme_component($plugin)
+	{
+		return isset($plugin['type']) && $plugin['type'] === 'theme';
+	}
+
+	/**
 	 * 現在のバージョンを取得
 	 *
 	 * @param string $plugin_id プラグインID
@@ -760,9 +873,30 @@ class GitHub_Push_Github_API
 	 */
 	public function get_current_version($plugin_id)
 	{
-		$plugin_slug = $this->get_plugin_slug($plugin_id);
+		$plugin = $this->get_plugin_data($plugin_id);
 
-		if (! $plugin_slug) {
+		if (! $plugin) {
+			return '0.0.0';
+		}
+
+		if ($this->is_theme_component($plugin)) {
+			$theme_slug = isset($plugin['theme_slug']) ? $plugin['theme_slug'] : '';
+			if (empty($theme_slug)) {
+				return '0.0.0';
+			}
+
+			$theme = wp_get_theme($theme_slug);
+			if (! $theme->exists()) {
+				return '0.0.0';
+			}
+
+			$version = $theme->get('Version');
+			return ! empty($version) ? $version : '0.0.0';
+		}
+
+		$plugin_slug = isset($plugin['plugin_slug']) ? $plugin['plugin_slug'] : '';
+
+		if (empty($plugin_slug)) {
 			return '0.0.0';
 		}
 
@@ -795,16 +929,28 @@ class GitHub_Push_Github_API
 	}
 
 	/**
-	 * リポジトリがWordPressプラグインかどうかを検証
+	 * リポジトリがWordPressプラグイン/テーマかどうかを検証
 	 *
 	 * @param string $repo_url リポジトリURL
-	 * @param string $plugin_slug プラグインスラッグ
+	 * @param array  $component 対象情報
 	 * @param string $branch ブランチ名
 	 * @param string $token アクセストークン
 	 * @return true|WP_Error 検証成功またはエラー
 	 */
-	public function validate_plugin_repository($repo_url, $plugin_slug, $branch = 'main', $token = '')
+	public function validate_repository($repo_url, $component, $branch = 'main', $token = '')
 	{
+		$is_theme = isset($component['type']) && $component['type'] === 'theme';
+		$plugin_slug = isset($component['plugin_slug']) ? $component['plugin_slug'] : '';
+		$theme_slug = isset($component['theme_slug']) ? $component['theme_slug'] : '';
+
+		if ($is_theme && empty($theme_slug)) {
+			return new WP_Error('theme_slug_missing', __('テーマスラッグが指定されていません', 'push-from-github'));
+		}
+
+		if (! $is_theme && empty($plugin_slug)) {
+			return new WP_Error('plugin_slug_missing', __('プラグインスラッグが指定されていません', 'push-from-github'));
+		}
+
 		// リポジトリURLを解析
 		$repo_info = $this->parse_repo_url($repo_url);
 		if (is_wp_error($repo_info)) {
@@ -814,11 +960,9 @@ class GitHub_Push_Github_API
 		// リポジトリが存在するか確認
 		$repo_data = $this->get_repo_info($repo_url, $token);
 		if (is_wp_error($repo_data)) {
-			$error_code = $repo_data->get_error_code();
 			$error_message = $repo_data->get_error_message();
 
 			if ($error_message === 'Not Found') {
-				// translators: %1$s: Repository owner, %2$s: Repository name
 				return new WP_Error(
 					'repo_not_found',
 					sprintf(
@@ -839,10 +983,6 @@ class GitHub_Push_Github_API
 			);
 		}
 
-		// プラグインファイルのパスを取得
-		$plugin_filename = basename($plugin_slug);
-		$plugin_dir = dirname($plugin_slug);
-
 		// リポジトリのルートディレクトリの内容を取得
 		$root_contents_url = $this->api_base . '/repos/' . $repo_info['owner'] . '/' . $repo_info['repo'] . '/contents?ref=' . $branch;
 		$root_contents = $this->make_request($root_contents_url, $token);
@@ -858,45 +998,53 @@ class GitHub_Push_Github_API
 			);
 		}
 
-		// プラグインファイルを検索
-		$plugin_file_path = $this->find_plugin_file_in_contents($root_contents, $plugin_filename, $repo_info, $branch, $token);
+		if (! is_array($root_contents)) {
+			return new WP_Error('invalid_response', __('リポジトリの内容を取得できませんでした。', 'push-from-github'));
+		}
 
-		if (!$plugin_file_path) {
-			// プラグインファイルが見つからない場合、プラグインメインファイルを検索
-			$plugin_file_path = $this->find_plugin_main_file($root_contents, $repo_info, $branch, $token);
+		if ($is_theme) {
+			$target_path = $this->find_theme_main_file($root_contents, $repo_info, $branch, $token, $theme_slug);
+		} else {
+			$plugin_filename = basename($plugin_slug);
+			$target_path = $this->find_plugin_file_in_contents($root_contents, $plugin_filename, $repo_info, $branch, $token);
 
-			if (!$plugin_file_path) {
-				return new WP_Error(
-					'plugin_file_not_found',
-					sprintf(
-						// translators: %s: Plugin slug
-						__('指定されたプラグインファイル（%s）がリポジトリ内に見つかりませんでした。リポジトリがWordPressプラグインではない可能性があります。', 'push-from-github'),
-						$plugin_slug
-					)
-				);
+			if (! $target_path) {
+				$target_path = $this->find_plugin_main_file($root_contents, $repo_info, $branch, $token);
 			}
 		}
 
-		// プラグインファイルの内容を取得して検証
-		$file_url = $this->api_base . '/repos/' . $repo_info['owner'] . '/' . $repo_info['repo'] . '/contents/' . $plugin_file_path . '?ref=' . $branch;
+		if (! $target_path) {
+			$error_code = $is_theme ? 'theme_file_not_found' : 'plugin_file_not_found';
+			$error_message = $is_theme
+				? __('style.css がリポジトリ内に見つかりませんでした。このリポジトリはWordPressテーマではない可能性があります。', 'push-from-github')
+				: sprintf(
+					__('指定されたプラグインファイル（%s）がリポジトリ内に見つかりませんでした。リポジトリがWordPressプラグインではない可能性があります。', 'push-from-github'),
+					$plugin_slug
+				);
+
+			return new WP_Error($error_code, $error_message);
+		}
+
+		// ファイルの内容を取得して検証
+		$file_url = $this->api_base . '/repos/' . $repo_info['owner'] . '/' . $repo_info['repo'] . '/contents/' . $target_path . '?ref=' . $branch;
 		$file_response = $this->make_request($file_url, $token);
 
 		if (is_wp_error($file_response)) {
 			return new WP_Error(
-				'plugin_file_read_error',
+				$is_theme ? 'theme_file_read_error' : 'plugin_file_read_error',
 				sprintf(
 					// translators: %s: Error message
-					__('プラグインファイルの内容を取得できませんでした: %s', 'push-from-github'),
+					__('%sファイルの内容を取得できませんでした: %s', 'push-from-github'),
+					$is_theme ? 'style.css' : __('プラグイン', 'push-from-github'),
 					$file_response->get_error_message()
 				)
 			);
 		}
 
-		// Base64デコード
-		if (!isset($file_response['content'])) {
+		if (! isset($file_response['content'])) {
 			return new WP_Error(
-				'plugin_file_content_error',
-				__('プラグインファイルの内容が取得できませんでした。', 'push-from-github')
+				$is_theme ? 'theme_file_content_error' : 'plugin_file_content_error',
+				__('ファイルの内容が取得できませんでした。', 'push-from-github')
 			);
 		}
 
@@ -905,30 +1053,58 @@ class GitHub_Push_Github_API
 
 		if ($file_content === false) {
 			return new WP_Error(
-				'plugin_file_decode_error',
-				__('プラグインファイルの内容をデコードできませんでした。', 'push-from-github')
+				$is_theme ? 'theme_file_decode_error' : 'plugin_file_decode_error',
+				__('ファイルの内容をデコードできませんでした。', 'push-from-github')
 			);
 		}
 
-		// プラグインヘッダーを検証
-		$has_plugin_name = preg_match('/Plugin\s*Name:\s*([^\n\r]+)/i', $file_content);
 		$has_version = preg_match('/Version:\s*([^\s\n\r\*\/]+)/i', $file_content);
 
-		if (!$has_plugin_name) {
+		if ($is_theme) {
+			$has_theme_name = preg_match('/Theme\s*Name:\s*([^\n\r]+)/i', $file_content);
+
+			if (! $has_theme_name) {
+				return new WP_Error(
+					'invalid_theme_header',
+					__('style.css に「Theme Name:」ヘッダーが見つかりませんでした。このリポジトリはWordPressテーマではない可能性があります。', 'push-from-github')
+				);
+			}
+		} else {
+			$has_plugin_name = preg_match('/Plugin\s*Name:\s*([^\n\r]+)/i', $file_content);
+
+			if (! $has_plugin_name) {
+				return new WP_Error(
+					'invalid_plugin_header',
+					__('プラグインファイルに「Plugin Name:」ヘッダーが見つかりませんでした。このリポジトリはWordPressプラグインではない可能性があります。', 'push-from-github')
+				);
+			}
+		}
+
+		if (! $has_version) {
 			return new WP_Error(
-				'invalid_plugin_header',
-				__('プラグインファイルに「Plugin Name:」ヘッダーが見つかりませんでした。このリポジトリはWordPressプラグインではない可能性があります。', 'push-from-github')
+				'invalid_component_header',
+				__('ファイルに「Version:」ヘッダーが見つかりませんでした。ヘッダーが正しく記載されているか確認してください。', 'push-from-github')
 			);
 		}
 
-		if (!$has_version) {
-			return new WP_Error(
-				'invalid_plugin_header',
-				__('プラグインファイルに「Version:」ヘッダーが見つかりませんでした。プラグインヘッダーが正しく記載されているか確認してください。', 'push-from-github')
-			);
-		}
-
-		// 検証成功
 		return true;
+	}
+
+	/**
+	 * 旧メソッド（後方互換用）
+	 *
+	 * @deprecated 1.2.0
+	 */
+	public function validate_plugin_repository($repo_url, $plugin_slug, $branch = 'main', $token = '')
+	{
+		return $this->validate_repository(
+			$repo_url,
+			array(
+				'type' => 'plugin',
+				'plugin_slug' => $plugin_slug,
+			),
+			$branch,
+			$token
+		);
 	}
 }

@@ -52,10 +52,14 @@ class GitHub_Push_Notifications
 			return;
 		}
 
+		$label = $this->get_component_label($plugin);
+		$name = isset($plugin['plugin_name']) ? $plugin['plugin_name'] : '';
+
 		$message = sprintf(
-			// translators: %1$s: Plugin name, %2$s: Version number
-			__('プラグイン "%1$s" が %2$s に更新されました。', 'push-from-github'),
-			$plugin['plugin_name'],
+			// translators: %1$s: Component label, %2$s: Component name, %3$s: Version number
+			__('%1$s「%2$s」が %3$s に更新されました。', 'push-from-github'),
+			$label,
+			$name,
 			$version
 		);
 
@@ -83,10 +87,14 @@ class GitHub_Push_Notifications
 			return;
 		}
 
+		$label = $this->get_component_label($plugin);
+		$name = isset($plugin['plugin_name']) ? $plugin['plugin_name'] : '';
+
 		$message = sprintf(
-			// translators: %s: Plugin name
-			__('プラグイン "%s" がロールバックされました。', 'push-from-github'),
-			$plugin['plugin_name']
+			// translators: %1$s: Component label, %2$s: Component name
+			__('%1$s「%2$s」がロールバックされました。', 'push-from-github'),
+			$label,
+			$name
 		);
 
 		// 管理画面通知
@@ -114,10 +122,14 @@ class GitHub_Push_Notifications
 			return;
 		}
 
+		$label = $this->get_component_label($plugin);
+		$name = isset($plugin['plugin_name']) ? $plugin['plugin_name'] : '';
+
 		$message = sprintf(
-			// translators: %1$s: Plugin name, %2$s: Version number
-			__('プラグイン "%1$s" の新しいバージョン %2$s が利用可能です。', 'push-from-github'),
-			$plugin['plugin_name'],
+			// translators: %1$s: Component label, %2$s: Component name, %3$s: Version number
+			__('%1$s「%2$s」の新しいバージョン %3$s が利用可能です。', 'push-from-github'),
+			$label,
+			$name,
 			$version
 		);
 
@@ -146,10 +158,14 @@ class GitHub_Push_Notifications
 			return;
 		}
 
+		$label = $this->get_component_label($plugin);
+		$name = isset($plugin['plugin_name']) ? $plugin['plugin_name'] : '';
+
 		$message = sprintf(
-			// translators: %1$s: Plugin name, %2$s: Error message
-			__('プラグイン "%1$s" の更新中にエラーが発生しました: %2$s', 'push-from-github'),
-			$plugin['plugin_name'],
+			// translators: %1$s: Component label, %2$s: Component name, %3$s: Error message
+			__('%1$s「%2$s」の更新中にエラーが発生しました: %3$s', 'push-from-github'),
+			$label,
+			$name,
 			$error_message
 		);
 
@@ -285,5 +301,18 @@ class GitHub_Push_Notifications
 		}
 
 		return $plugins[$plugin_id];
+	}
+
+	/**
+	 * 対象の種類ラベルを取得
+	 *
+	 * @param array $plugin プラグイン情報
+	 * @return string ラベル
+	 */
+	private function get_component_label($plugin)
+	{
+		return (isset($plugin['type']) && $plugin['type'] === 'theme')
+			? __('テーマ', 'push-from-github')
+			: __('プラグイン', 'push-from-github');
 	}
 }

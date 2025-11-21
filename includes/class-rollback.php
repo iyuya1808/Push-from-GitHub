@@ -56,6 +56,13 @@ class GitHub_Push_Rollback {
 			return $error;
 		}
 		
+		$context = $this->resolve_component_context( $plugin );
+
+		if ( is_wp_error( $context ) ) {
+			$logger->log( $plugin_id, 'rollback', 'error', $context->get_error_message() );
+			return $context;
+		}
+		
 		// バックアップパスを取得
 		if ( empty( $backup_path ) ) {
 			$backup_path = $this->get_latest_backup( $plugin_id );
@@ -72,22 +79,19 @@ class GitHub_Push_Rollback {
 			return $error;
 		}
 		
-		$plugin_slug = isset( $plugin['plugin_slug'] ) ? $plugin['plugin_slug'] : '';
-		
-		if ( empty( $plugin_slug ) ) {
-			$error = new WP_Error( 'plugin_slug_missing', __( 'プラグインスラッグが指定されていません', 'push-from-github' ) );
-			$logger->log( $plugin_id, 'rollback', 'error', $error->get_error_message() );
-			return $error;
-		}
-		
-		$plugin_dir = WP_PLUGIN_DIR . '/' . dirname( $plugin_slug );
+		$component_dir = $context['dir'];
+		$component_slug = $context['slug'];
 		
 		// 既存のプラグインが有効かどうかを確認
-		$is_active = is_plugin_active( $plugin_slug );
+		if ( $context['is_theme'] ) {
+			$is_active = in_array( $component_slug, array( get_stylesheet(), get_template() ), true );
+		} else {
+			$is_active = is_plugin_active( $component_slug );
+		}
 		
 		// 既存のプラグインを削除
-		if ( file_exists( $plugin_dir ) ) {
-			$this->delete_directory( $plugin_dir );
+		if ( file_exists( $component_dir ) ) {
+			$this->delete_directory( $component_dir );
 		}
 		
 		// ZIPファイルを展開
@@ -99,7 +103,7 @@ class GitHub_Push_Rollback {
 		}
 		
 		// 展開したファイルを移動
-		$move_result = $this->move_extracted_files( $extracted_path, $plugin_dir );
+		$move_result = $this->move_extracted_files( $extracted_path, $component_dir );
 		
 		if ( is_wp_error( $move_result ) ) {
 			$logger->log( $plugin_id, 'rollback', 'error', $move_result->get_error_message() );
@@ -112,10 +116,17 @@ class GitHub_Push_Rollback {
 		
 		// プラグインを再読み込み
 		wp_cache_flush();
+		if ( $context['is_theme'] ) {
+			wp_clean_themes_cache();
+		}
 		
 		// プラグインが有効だった場合は再度有効化
-		if ( $is_active ) {
-			activate_plugin( $plugin_slug );
+		if ( $context['is_theme'] ) {
+			if ( $is_active ) {
+				switch_theme( $component_slug );
+			}
+		} elseif ( $is_active ) {
+			activate_plugin( $component_slug );
 		}
 		
 		// 通知を送信
@@ -123,10 +134,13 @@ class GitHub_Push_Rollback {
 		$notifications->send_rollback_notification( $plugin_id );
 		
 		$message = ! empty( $version ) 
-			? sprintf( 
-				// translators: %s: Version number
-				__( 'プラグインをバージョン %s にロールバックしました', 'push-from-github' ), $version )
-			: __( 'プラグインをロールバックしました', 'push-from-github' );
+			? sprintf(
+				$context['is_theme']
+					? __( 'テーマをバージョン %s にロールバックしました', 'push-from-github' )
+					: __( 'プラグインをバージョン %s にロールバックしました', 'push-from-github' ),
+				$version
+			)
+			: ( $context['is_theme'] ? __( 'テーマをロールバックしました', 'push-from-github' ) : __( 'プラグインをロールバックしました', 'push-from-github' ) );
 		$logger->log( $plugin_id, 'rollback', 'success', $message, $version );
 		
 		return array(
@@ -350,6 +364,45 @@ class GitHub_Push_Rollback {
 		}
 		
 		return $plugins[ $plugin_id ];
+	}
+
+	/**
+	 * プラグイン/テーマ情報の共通コンテキストを取得
+	 *
+	 * @param array $plugin プラグイン情報
+	 * @return array|WP_Error
+	 */
+	private function resolve_component_context( $plugin ) {
+		$is_theme = isset( $plugin['type'] ) && 'theme' === $plugin['type'];
+		
+		if ( $is_theme ) {
+			$slug = isset( $plugin['theme_slug'] ) ? $plugin['theme_slug'] : '';
+			
+			if ( empty( $slug ) ) {
+				return new WP_Error( 'theme_slug_missing', __( 'テーマスラッグが指定されていません', 'push-from-github' ) );
+			}
+			
+			$dir = trailingslashit( get_theme_root() ) . $slug;
+		} else {
+			$slug = isset( $plugin['plugin_slug'] ) ? $plugin['plugin_slug'] : '';
+			
+			if ( empty( $slug ) ) {
+				return new WP_Error( 'plugin_slug_missing', __( 'プラグインスラッグが指定されていません', 'push-from-github' ) );
+			}
+			
+			$dir_name = dirname( $slug );
+			if ( '.' === $dir_name || '/' === $dir_name ) {
+				$dir = WP_PLUGIN_DIR;
+			} else {
+				$dir = WP_PLUGIN_DIR . '/' . $dir_name;
+			}
+		}
+		
+		return array(
+			'is_theme'   => $is_theme,
+			'slug'       => $slug,
+			'dir'        => untrailingslashit( $dir ),
+		);
 	}
 }
 

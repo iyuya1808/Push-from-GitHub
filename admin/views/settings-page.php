@@ -16,9 +16,9 @@ $github_push_message = isset($_GET['message']) ? sanitize_text_field(wp_unslash(
 $github_push_error = isset($_GET['error']) ? sanitize_text_field(wp_unslash($_GET['error'])) : '';
 
 if ($github_push_message === 'saved') {
-	echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('プラグインを保存しました', 'push-from-github') . '</p></div>';
+	echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('設定を保存しました', 'push-from-github') . '</p></div>';
 } elseif ($github_push_message === 'deleted') {
-	echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('プラグインを削除しました', 'push-from-github') . '</p></div>';
+	echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('対象を削除しました', 'push-from-github') . '</p></div>';
 }
 
 if ($github_push_error === 'missing_fields') {
@@ -52,7 +52,7 @@ if ($github_push_error === 'missing_fields') {
 	<h1><?php echo esc_html__('Push from GitHub 設定', 'push-from-github'); ?></h1>
 
 	<div class="github-push-description" style="margin: 20px 0;">
-		<p><?php echo esc_html__('GitHubで管理されているWordPressプラグインを登録・管理できます。非公開リポジトリにも対応しています。', 'push-from-github'); ?></p>
+		<p><?php echo esc_html__('GitHubで管理されているWordPressプラグイン / テーマを登録・管理できます。非公開リポジトリにも対応しています。', 'push-from-github'); ?></p>
 	</div>
 
 	<div class="github-push-header">
@@ -63,13 +63,14 @@ if ($github_push_error === 'missing_fields') {
 
 	<?php if (empty($plugins)) : ?>
 		<div class="github-push-empty">
-			<p><?php echo esc_html__('登録されているプラグインはありません。', 'push-from-github'); ?></p>
+			<p><?php echo esc_html__('登録されている項目はありません。', 'push-from-github'); ?></p>
 		</div>
 	<?php else : ?>
 		<table class="wp-list-table widefat fixed striped">
 			<thead>
 				<tr>
-					<th><?php echo esc_html__('プラグイン名', 'push-from-github'); ?></th>
+					<th><?php echo esc_html__('名前', 'push-from-github'); ?></th>
+					<th><?php echo esc_html__('タイプ', 'push-from-github'); ?></th>
 					<th><?php echo esc_html__('リポジトリURL', 'push-from-github'); ?></th>
 					<th><?php echo esc_html__('ブランチ/タグ', 'push-from-github'); ?></th>
 					<th><?php echo esc_html__('現在のバージョン', 'push-from-github'); ?></th>
@@ -92,6 +93,12 @@ if ($github_push_error === 'missing_fields') {
 							<?php if ($github_push_has_update) : ?>
 								<span class="update-available"><?php echo esc_html__('更新あり', 'push-from-github'); ?></span>
 							<?php endif; ?>
+						</td>
+						<td>
+							<?php
+							$type = isset($plugin['type']) ? $plugin['type'] : 'plugin';
+							echo esc_html($type === 'theme' ? __('テーマ', 'push-from-github') : __('プラグイン', 'push-from-github'));
+							?>
 						</td>
 						<td>
 							<a href="<?php echo esc_url($plugin['repo_url']); ?>" target="_blank">

@@ -45,6 +45,7 @@ class GitHub_Push_Updater {
 	 */
 	public function update_plugin( $plugin_id, $update_info = false ) {
 		$logger = GitHub_Push_Logger::get_instance();
+		$github_api = GitHub_Push_Github_API::get_instance();
 		
 		// プラグイン情報を取得
 		$plugin = $this->get_plugin_data( $plugin_id );
@@ -57,13 +58,19 @@ class GitHub_Push_Updater {
 		
 		// 更新チェック（既に取得済みの場合は再チェックをスキップ）
 		if ( $update_info === false ) {
-			$github_api = GitHub_Push_Github_API::get_instance();
 			$update_info = $github_api->check_for_updates( $plugin_id );
 			
 			if ( is_wp_error( $update_info ) ) {
 				$logger->log( $plugin_id, 'update', 'error', $update_info->get_error_message() );
 				return $update_info;
 			}
+		}
+
+		$context = $this->resolve_component_context( $plugin );
+
+		if ( is_wp_error( $context ) ) {
+			$logger->log( $plugin_id, 'update', 'error', $context->get_error_message() );
+			return $context;
 		}
 		
 		if ( ! isset( $update_info['update_available'] ) || ! $update_info['update_available'] ) {
@@ -97,28 +104,23 @@ class GitHub_Push_Updater {
 			return $extracted_path;
 		}
 		
-		// プラグインディレクトリを取得
-		$plugin_slug = isset( $plugin['plugin_slug'] ) ? $plugin['plugin_slug'] : '';
-		
-		if ( empty( $plugin_slug ) ) {
-			$error = new WP_Error( 'plugin_slug_missing', __( 'プラグインスラッグが指定されていません', 'push-from-github' ) );
-			$logger->log( $plugin_id, 'update', 'error', $error->get_error_message() );
-			$this->cleanup_temp_files( $zip_path, $extracted_path );
-			return $error;
-		}
-		
-		$plugin_dir = WP_PLUGIN_DIR . '/' . dirname( $plugin_slug );
+		$component_dir = $context['dir'];
+		$component_slug = $context['slug'];
 		
 		// 既存のプラグインが有効かどうかを確認
-		$is_active = is_plugin_active( $plugin_slug );
+		if ( $context['is_theme'] ) {
+			$is_active = in_array( $component_slug, array( get_stylesheet(), get_template() ), true );
+		} else {
+			$is_active = is_plugin_active( $component_slug );
+		}
 		
 		// 既存のプラグインを削除
-		if ( file_exists( $plugin_dir ) ) {
-			$this->delete_directory( $plugin_dir );
+		if ( file_exists( $component_dir ) ) {
+			$this->delete_directory( $component_dir );
 		}
 		
 		// 展開したファイルを移動
-		$move_result = $this->move_extracted_files( $extracted_path, $plugin_dir, $plugin );
+		$move_result = $this->move_extracted_files( $extracted_path, $component_dir, $plugin );
 		
 		if ( is_wp_error( $move_result ) ) {
 			$logger->log( $plugin_id, 'update', 'error', $move_result->get_error_message() );
@@ -131,14 +133,21 @@ class GitHub_Push_Updater {
 		
 		// プラグインを再読み込み
 		wp_cache_flush();
+		if ( $context['is_theme'] ) {
+			wp_clean_themes_cache();
+		}
 		
 		// 更新チェックのキャッシュをクリア
 		$cache_key = 'github_push_update_' . $plugin_id;
 		delete_transient( $cache_key );
 		
 		// プラグインが有効だった場合は再度有効化
-		if ( $is_active ) {
-			activate_plugin( $plugin_slug );
+		if ( $context['is_theme'] ) {
+			if ( $is_active ) {
+				switch_theme( $component_slug );
+			}
+		} elseif ( $is_active ) {
+			activate_plugin( $component_slug );
 		}
 		
 		// 通知を送信
@@ -146,7 +155,10 @@ class GitHub_Push_Updater {
 		$notifications->send_update_notification( $plugin_id, $update_info['latest_version'] );
 		
 		// translators: %s: Version number
-		$message = sprintf( __( 'プラグインを %s に更新しました', 'push-from-github' ), $update_info['latest_version'] );
+		$message = sprintf(
+			$context['is_theme'] ? __( 'テーマを %s に更新しました', 'push-from-github' ) : __( 'プラグインを %s に更新しました', 'push-from-github' ),
+			$update_info['latest_version']
+		);
 		$logger->log( $plugin_id, 'update', 'success', $message, $update_info['latest_version'] );
 		
 		return array(
@@ -325,16 +337,20 @@ class GitHub_Push_Updater {
 			return new WP_Error( 'plugin_not_found', __( 'プラグインが見つかりません', 'push-from-github' ) );
 		}
 		
-		$plugin_slug = isset( $plugin['plugin_slug'] ) ? $plugin['plugin_slug'] : '';
-		
-		if ( empty( $plugin_slug ) ) {
-			return new WP_Error( 'plugin_slug_missing', __( 'プラグインスラッグが指定されていません', 'push-from-github' ) );
+		$context = $this->resolve_component_context( $plugin );
+
+		if ( is_wp_error( $context ) ) {
+			return $context;
 		}
-		
-		$plugin_dir = WP_PLUGIN_DIR . '/' . dirname( $plugin_slug );
-		
-		if ( ! file_exists( $plugin_dir ) ) {
-			return new WP_Error( 'plugin_dir_not_found', __( 'プラグインディレクトリが見つかりません', 'push-from-github' ) );
+
+		$component_dir = $context['dir'];
+
+		if ( ! file_exists( $component_dir ) ) {
+			$error_code = $context['is_theme'] ? 'theme_dir_not_found' : 'plugin_dir_not_found';
+			$error_message = $context['is_theme']
+				? __( 'テーマディレクトリが見つかりません', 'push-from-github' )
+				: __( 'プラグインディレクトリが見つかりません', 'push-from-github' );
+			return new WP_Error( $error_code, $error_message );
 		}
 		
 		$upload_dir = wp_upload_dir();
@@ -359,19 +375,19 @@ class GitHub_Push_Updater {
 		}
 		
 		$files = new RecursiveIteratorIterator(
-			new RecursiveDirectoryIterator( $plugin_dir ),
+			new RecursiveDirectoryIterator( $component_dir ),
 			RecursiveIteratorIterator::LEAVES_ONLY
 		);
 		
-		// プラグインディレクトリの正規化されたパスを取得（末尾のスラッシュを統一）
-		$plugin_dir_normalized = rtrim( str_replace( '\\', '/', $plugin_dir ), '/' ) . '/';
+		// ディレクトリの正規化されたパスを取得（末尾のスラッシュを統一）
+		$component_dir_normalized = rtrim( str_replace( '\\', '/', $component_dir ), '/' ) . '/';
 		
 		foreach ( $files as $file ) {
 			if ( ! $file->isDir() ) {
 				$file_path = $file->getRealPath();
 				// 正規化されたパスを使用して相対パスを取得
 				$file_path_normalized = str_replace( '\\', '/', $file_path );
-				$relative_path = str_replace( $plugin_dir_normalized, '', $file_path_normalized );
+				$relative_path = str_replace( $component_dir_normalized, '', $file_path_normalized );
 				$zip->addFile( $file_path, $relative_path );
 			}
 		}
@@ -383,8 +399,8 @@ class GitHub_Push_Updater {
 		$current_version = $github_api->get_current_version( $plugin_id );
 		
 		// バージョンが '0.0.0' の場合は、プラグインファイルから直接取得を試みる
-		if ( $current_version === '0.0.0' && ! empty( $plugin_slug ) ) {
-			$plugin_file = WP_PLUGIN_DIR . '/' . $plugin_slug;
+		if ( ! $context['is_theme'] && $current_version === '0.0.0' && ! empty( $plugin['plugin_slug'] ) ) {
+			$plugin_file = WP_PLUGIN_DIR . '/' . $plugin['plugin_slug'];
 			if ( file_exists( $plugin_file ) ) {
 				$plugin_data = get_plugin_data( $plugin_file );
 				if ( isset( $plugin_data['Version'] ) && ! empty( $plugin_data['Version'] ) ) {
@@ -462,6 +478,46 @@ class GitHub_Push_Updater {
 		}
 		
 		return $plugins[ $plugin_id ];
+	}
+
+	/**
+	 * プラグイン/テーマのパス情報を取得
+	 *
+	 * @param array $plugin プラグイン情報
+	 * @return array|WP_Error
+	 */
+	private function resolve_component_context( $plugin ) {
+		$is_theme = isset( $plugin['type'] ) && 'theme' === $plugin['type'];
+		
+		if ( $is_theme ) {
+			$slug = isset( $plugin['theme_slug'] ) ? $plugin['theme_slug'] : '';
+			
+			if ( empty( $slug ) ) {
+				return new WP_Error( 'theme_slug_missing', __( 'テーマスラッグが指定されていません', 'push-from-github' ) );
+			}
+			
+			$dir = trailingslashit( get_theme_root() ) . $slug;
+		} else {
+			$slug = isset( $plugin['plugin_slug'] ) ? $plugin['plugin_slug'] : '';
+			
+			if ( empty( $slug ) ) {
+				return new WP_Error( 'plugin_slug_missing', __( 'プラグインスラッグが指定されていません', 'push-from-github' ) );
+			}
+			
+			$dir_name = dirname( $slug );
+			if ( '.' === $dir_name || '/' === $dir_name ) {
+				$dir = WP_PLUGIN_DIR;
+			} else {
+				$dir = WP_PLUGIN_DIR . '/' . $dir_name;
+			}
+		}
+		
+		return array(
+			'is_theme'   => $is_theme,
+			'slug'       => $slug,
+			'dir'        => untrailingslashit( $dir ),
+			'type_label' => $is_theme ? __( 'テーマ', 'push-from-github' ) : __( 'プラグイン', 'push-from-github' ),
+		);
 	}
 }
 

@@ -100,11 +100,20 @@ class GitHub_Push_Settings {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 		$installed_plugins = get_plugins();
+		$installed_themes = wp_get_themes();
 		
 		// 既に登録されているプラグインを除外
 		$registered_plugins = get_option( 'github_push_plugins', array() );
 		$registered_slugs = array();
+		$registered_theme_slugs = array();
 		foreach ( $registered_plugins as $reg_plugin ) {
+			$type = isset( $reg_plugin['type'] ) ? $reg_plugin['type'] : 'plugin';
+			if ( $type === 'theme' ) {
+				if ( isset( $reg_plugin['theme_slug'] ) ) {
+					$registered_theme_slugs[] = $reg_plugin['theme_slug'];
+				}
+				continue;
+			}
 			if ( isset( $reg_plugin['plugin_slug'] ) ) {
 				$registered_slugs[] = $reg_plugin['plugin_slug'];
 			}
@@ -113,6 +122,9 @@ class GitHub_Push_Settings {
 		// 編集時は現在のプラグインは除外しない
 		if ( ! empty( $plugin_id ) && isset( $plugin['plugin_slug'] ) ) {
 			$registered_slugs = array_diff( $registered_slugs, array( $plugin['plugin_slug'] ) );
+		}
+		if ( ! empty( $plugin_id ) && isset( $plugin['theme_slug'] ) ) {
+			$registered_theme_slugs = array_diff( $registered_theme_slugs, array( $plugin['theme_slug'] ) );
 		}
 		
 		include GITHUB_PUSH_PLUGIN_DIR . 'admin/views/edit-plugin-form.php';
@@ -132,10 +144,15 @@ class GitHub_Push_Settings {
 		$repo_url = isset( $_POST['repo_url'] ) ? esc_url_raw( wp_unslash( $_POST['repo_url'] ) ) : '';
 		$branch = isset( $_POST['branch'] ) ? sanitize_text_field( wp_unslash( $_POST['branch'] ) ) : 'main';
 		$plugin_slug = isset( $_POST['plugin_slug'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_slug'] ) ) : '';
+		$theme_slug = isset( $_POST['theme_slug'] ) ? sanitize_text_field( wp_unslash( $_POST['theme_slug'] ) ) : '';
 		$token = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
 		$use_tags = isset( $_POST['use_tags'] ) ? (bool) $_POST['use_tags'] : false;
+		$component_type = isset( $_POST['component_type'] ) ? sanitize_text_field( wp_unslash( $_POST['component_type'] ) ) : 'plugin';
+		$component_type = in_array( $component_type, array( 'plugin', 'theme' ), true ) ? $component_type : 'plugin';
 		
-		if ( empty( $repo_url ) || empty( $plugin_slug ) ) {
+		$required_slug = ( $component_type === 'theme' ) ? $theme_slug : $plugin_slug;
+		
+		if ( empty( $repo_url ) || empty( $required_slug ) ) {
 			wp_safe_redirect( add_query_arg( array( 'page' => 'push-from-github', 'error' => 'missing_fields' ), admin_url( 'admin.php' ) ) );
 			exit;
 		}
@@ -143,8 +160,17 @@ class GitHub_Push_Settings {
 		// GitHubからリポジトリ情報を取得してプラグイン名を生成
 		$github_api = GitHub_Push_Github_API::get_instance();
 		
-		// リポジトリがWordPressプラグインかどうかを検証
-		$validation_result = $github_api->validate_plugin_repository( $repo_url, $plugin_slug, $branch, $token );
+		// リポジトリがWordPressプラグイン/テーマかどうかを検証
+		$validation_result = $github_api->validate_repository(
+			$repo_url,
+			array(
+				'type'        => $component_type,
+				'plugin_slug' => $plugin_slug,
+				'theme_slug'  => $theme_slug,
+			),
+			$branch,
+			$token
+		);
 		if ( is_wp_error( $validation_result ) ) {
 			$error_code = $validation_result->get_error_code();
 			$error_message = $validation_result->get_error_message();
@@ -186,7 +212,9 @@ class GitHub_Push_Settings {
 			'plugin_name' => $plugin_name,
 			'repo_url' => $repo_url,
 			'branch' => $branch,
-			'plugin_slug' => $plugin_slug,
+			'plugin_slug' => $component_type === 'theme' ? '' : $plugin_slug,
+			'theme_slug' => $component_type === 'theme' ? $theme_slug : '',
+			'type' => $component_type,
 			'token' => $token,
 			'use_tags' => $use_tags,
 			'created_at' => isset( $plugins[ $plugin_id ]['created_at'] ) ? $plugins[ $plugin_id ]['created_at'] : current_time( 'mysql' ),

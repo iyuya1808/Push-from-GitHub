@@ -15,6 +15,34 @@
 			}
 		});
 		
+		// テーマスラッグの選択
+		$('#theme_slug_select').on('change', function() {
+			var selectedSlug = $(this).val();
+			if (selectedSlug) {
+				$('#theme_slug').val(selectedSlug);
+			}
+		});
+		
+		// プラグイン/テーマ切り替え
+		function toggleComponentFields() {
+			var type = $('input[name="component_type"]:checked').val() || 'plugin';
+			var isTheme = type === 'theme';
+			
+			if (isTheme) {
+				$('.github-push-field--theme').show();
+				$('.github-push-field--plugin').hide();
+			} else {
+				$('.github-push-field--theme').hide();
+				$('.github-push-field--plugin').show();
+			}
+			
+			$('#plugin_slug').prop('required', !isTheme);
+			$('#theme_slug').prop('required', isTheme);
+		}
+		
+		$('input[name="component_type"]').on('change', toggleComponentFields);
+		toggleComponentFields();
+		
 		// 更新チェック
 		$(document).on('click', '.check-update', function(e) {
 			e.preventDefault();
@@ -99,7 +127,7 @@
 				return;
 			}
 			
-			if (!confirm('プラグインを更新しますか？')) {
+			if (!confirm('選択した項目を更新しますか？')) {
 				return;
 			}
 			
