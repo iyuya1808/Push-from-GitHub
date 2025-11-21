@@ -45,6 +45,9 @@ $github_push_component_type = isset($plugin['type']) ? $plugin['type'] : 'plugin
 $github_push_theme_slug = isset($plugin['theme_slug']) ? $plugin['theme_slug'] : '';
 $github_push_token = isset($plugin['token']) ? $plugin['token'] : '';
 $github_push_use_tags = isset($plugin['use_tags']) ? $plugin['use_tags'] : false;
+
+$github_push_show_plugin_fields = ('theme' !== $github_push_component_type);
+$github_push_show_theme_fields = ('theme' === $github_push_component_type);
 ?>
 
 <div class="wrap">
@@ -132,7 +135,7 @@ $github_push_use_tags = isset($plugin['use_tags']) ? $plugin['use_tags'] : false
 						</p>
 					</td>
 				</tr>
-				<tr class="github-push-field github-push-field--plugin">
+				<tr class="github-push-field github-push-field--plugin" <?php echo $github_push_show_plugin_fields ? '' : 'style="display:none;"'; ?>>
 					<th scope="row">
 						<label for="plugin_slug"><?php echo esc_html__('プラグインスラッグ', 'push-from-github'); ?> <span class="required">*</span></label>
 					</th>
@@ -162,7 +165,7 @@ $github_push_use_tags = isset($plugin['use_tags']) ? $plugin['use_tags'] : false
 						</p>
 					</td>
 				</tr>
-				<tr class="github-push-field github-push-field--theme">
+				<tr class="github-push-field github-push-field--theme" <?php echo $github_push_show_theme_fields ? '' : 'style="display:none;"'; ?>>
 					<th scope="row">
 						<label for="theme_slug"><?php echo esc_html__('テーマスラッグ', 'push-from-github'); ?> <span class="required">*</span></label>
 					</th>
